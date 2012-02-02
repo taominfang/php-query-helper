@@ -12,10 +12,6 @@ require($_SERVER['DOCUMENT_ROOT'].'/smarty/configs/smartmain.php');
 
 
 
-dd($_SERVER);
-
-
-
 
 date_default_timezone_set('America/Los_Angeles');
 
@@ -192,7 +188,7 @@ try {
 		
 	}
 	
-	dd("we are end!");
+
 	
 } catch (Exception $e) {
 	$smarty->assign('errorMessage',"Exception:".$e->getMessage().' in file:'.$e->getFile().' line ['.$e->getLine().']');
