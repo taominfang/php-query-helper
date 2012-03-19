@@ -24,7 +24,7 @@
 
 </HEAD>
 <BODY bgcolor="#ffffff">
-
+{dec_include path="/decorators/error_message"}
 {$content}
 
 </BODY>

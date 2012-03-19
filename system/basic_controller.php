@@ -8,6 +8,9 @@ class BasicController{
 	
 	public function pre_filter(){
 		
+		
+		session_start();
+		header("Cache-Control: no-cache, must-revalidate");
 	}
 	
 	public function post_filter(){
