@@ -2,7 +2,14 @@
 
 class ExampleController extends BasicController{
 	
+	public function pre_filter(){
 	
+	
+		parent::pre_filter();
+	}
+	public function post_filter(){
+		parent::post_filter();
+	}
 	public function index(){
 		
 		
