@@ -12,7 +12,7 @@ if(!isset($____smartmain_php____)){
 	$smarty->cache_dir = __documents_root__.'/smarty/cache';
 	
 	//$smarty->debugging = true;
-	$smarty->caching = true;
+	$smarty->caching = false;
 	$smarty->cache_lifetime = 120;
 }
 ?>

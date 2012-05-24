@@ -175,56 +175,6 @@ function debug($message){
 	//echo substr($message,0,300)."\n";
 }
 
-function load_one_assoc_from_sql($db,$sql){
-	$result=run_sql($db,$sql);
 
-	if($result->num_rows >0){
-		$row=$result->fetch_assoc();
-		$result->close();
-		return $row;
-	}
-	$result->close();
-	return array();
-}
-
-function fetch_assoc_arrays_from_sql($db,$sql){
-	$result=run_sql($db,$sql);
-	$re=array();
-	if($result->num_rows >0){
-		while($row=$result->fetch_assoc()){
-			$re[]=$row;
-		}
-	}
-	$result->close();
-	return $re;
-}
-
-function fetch_arrays_from_sql($db,$sql){
-	$result=run_sql($db,$sql);
-	$re=array();
-	if($result->num_rows >0){
-		while($row=$result->fetch_row()){
-			$re[]=$row;
-		}
-	}
-	$result->close();
-	return $re;
-}
-
-
-function run_sql($db,$sql,$mode=MYSQLI_STORE_RESULT){
-	debug($sql);
-	$st=microtime(true);
-	$result=$db->query($sql,$mode);
-	$sp=sprintf('%.3f',(microtime(true)-$st));
-	debug("The sql Spend {$sp} seconds");
-	if(!$result){
-		throw new Exception("SQL :[$sql] is wrong, error message from mysql:{$db->error}");
-	}
-
-
-
-	return $result;
-}
 
 ?>

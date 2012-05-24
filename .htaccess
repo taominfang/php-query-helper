@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond  %{DOCUMENT_ROOT}/webroot%{REQUEST_URI} -f
+    RewriteRule ^(.*)$ /webroot/$1 [L]
+
+    RewriteCond %{DOCUMENT_ROOT}/%{REQUEST_URI} !-f
+    RewriteRule ^(.*)$ system/index.php [PT,L]
+
+</IfModule>
+

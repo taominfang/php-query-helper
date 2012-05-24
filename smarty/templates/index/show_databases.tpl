@@ -1,21 +1,22 @@
 {html_css src="/common/common.css"}
 
 <div align="center">
-	<form action="/index/generate" method="get">
+	
 	<table>
+	<caption>Select a database as current db</caption>
 	{foreach from=$dbs item=i}
 		<tr>
-			<td> <input type="checkbox" value='{{$i.name|escape}}' name='databases[]' {$i.ch}></td>
-			<td>{$i.name|escape}</td>
+			
+			<td><a href="/index/generate?databases={$i.name|escape}"> {$i.name|escape}</a></td>
 		</tr>
 		
 		
 	{/foreach}
 	
 		<tr>
-			<td colspan="2"><input type="submit" ></td>
+			
+			<td><a href="/index/generate?nodb=1">No DB </a></td>
 		</tr>
 	</table>
-	</form>
-	</form>
+
 </div>

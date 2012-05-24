@@ -1,0 +1,22 @@
+.float_left_element{
+	float: left;
+}
+
+.sql_element{
+	margin-right: 15px;
+}
+
+.waitting_insert{
+	width: 20px;
+	height: 20px;
+	background-color: red;
+}
+
+.hide{
+	display: none;
+}
+
+.query_area{
+	float: none;
+	margin-bottom: 50px;
+}

@@ -3,6 +3,7 @@
 
 include_once 'function.php';
 
+
 $smarty_template_dir=$_SERVER['DOCUMENT_ROOT'].'/smarty/templates';
 
 require($_SERVER['DOCUMENT_ROOT'].'/smarty/configs/smartmain.php');
