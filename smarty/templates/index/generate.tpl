@@ -23,9 +23,7 @@ var select_job_id='{$select_job_id}';
 			<div id="select_result_area">
 				<textarea id="select_result_text"></textarea>
 			</div>
-			<div id="select_represent_area">
-				
-			</div>
+			<div id="select_represent_area"></div>
 			<div id="select_design_area"></div>
 		</div>
 	</div>
@@ -78,9 +76,11 @@ var select_job_id='{$select_job_id}';
 </div>
 
 
+<div id="popup_dialog">
+	<div id="ajax_content" class=""></div>
+</div>
 
-<div
-	id="select_talbe_or_sub_query" class="user_select_dialog"></div>
+
 
 <div id="basic_select_query" class="hide">
 	<div class="sql_clause float_left_element">
@@ -93,5 +93,5 @@ var select_job_id='{$select_job_id}';
 </div>
 
 <div id='waitting_icon' class="hide">
-<img alt="" src="/images/loading.gif" width="50px" height="50px">
+	<img alt="" src="/images/loading.gif" width="50px" height="50px">
 </div>

@@ -1,26 +1,36 @@
-.float_left_element{
+.float_left_element {
 	float: left;
 }
 
-.sql_element{
+.sql_element {
 	margin-right: 15px;
 }
 
-.waitting_insert{
+.waitting_insert {
 	width: 20px;
 	height: 20px;
 	background-color: red;
 }
 
-.hide{
+.hide {
 	display: none;
 }
 
-.query_area{
+.query_area {
 	float: none;
 	margin-bottom: 50px;
 }
 
-.waiting_icon{
-	background-image:url('/images/loading');
+.waiting_icon {
+	background-image: url('/images/loading');
+}
+
+.preview_area {
+	width: 100%;
+	margin-left: 10px;
+	margin-right: 10px;
+	margin-top: 3px;
+	margin-bottom: 3px;
+	background-color: #efefef;
+	height: 30px;
 }

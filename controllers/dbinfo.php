@@ -11,7 +11,7 @@ class DbinfoController extends BasicController{
 		
 		if( ! parent::pre_filter($methodName)){
 				
-			if(in_array($methodName, array(strtolower('selectTableOrSubquery')))){
+			if(in_array($methodName, array('select_table_or_subquery'))){
 				
 				$this->reportErrorByAjax("Session Expired!");
 			}
@@ -33,16 +33,16 @@ class DbinfoController extends BasicController{
 
 
 
-	public function selectTableOrSubquery(){
+	public function select_table_or_subquery(){
 
 
 		try {
-			
+			srand(time(	));
 			$tables=get_all_tables($_SESSION['main_database']);
 				
-			if(!empty($database)){
-
-			}
+			$this->set('random',rand(1000000,9999999));
+			$this->set('tables',$tables);
+			$this->decorator='ajax';
 		} catch (Exception $e) {
 			
 			logException($e);
