@@ -20,3 +20,7 @@
 	float: none;
 	margin-bottom: 50px;
 }
+
+.waiting_icon{
+	background-image:url('/images/loading');
+}

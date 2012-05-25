@@ -7,7 +7,7 @@
 	{foreach from=$dbs item=i}
 		<tr>
 			
-			<td><a href="/index/generate?databases={$i.name|escape}"> {$i.name|escape}</a></td>
+			<td><a href="/index/generate?main_database={$i.name|escape}"> {$i.name|escape}</a></td>
 		</tr>
 		
 		

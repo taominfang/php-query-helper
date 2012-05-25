@@ -1,61 +1,53 @@
 <?php
-
+include_once '../system/dbfunction.php';
 class DbinfoController extends BasicController{
 
-	public function pre_filter(){
+	public function pre_filter($methodName=null){
 
 
-		parent::pre_filter();
-	}
-	public function post_filter(){
-		parent::post_filter();
-	}
-	public function example(){
+		$this->required_in_session=array("main_database",'host','user','password');
 
 
-		$this->set("Name","Fred Irving Johnathan Bradley Peppergill",true);
-		$this->set("FirstName",array("John","Mary","James","Henry"));
-		$this->set("LastName",array("Doe","Smith","Johnson","Case"));
-		$this->set("Class",array(array("A","B","C","D"), array("E", "F", "G", "H"),
-		array("I", "J", "K", "L"), array("M", "N", "O", "P")));
-
-		$this->set("contacts", array(array("phone" => "1", "fax" => "2", "cell" => "3"),
-		array("phone" => "555-4444", "fax" => "555-3333", "cell" => "760-1234")));
-
-		$this->set("option_values", array("NY","NE","KS","IA","OK","TX"));
-		$this->set("option_output", array("New York","Nebraska","Kansas","Iowa","Oklahoma","Texas"));
-		$this->set("option_selected", "NE");
-
-
-	}
-
-	public function showTables(){
-		if(!empty($_REQUEST['database'])){
-			$database=$_REQUEST['database'];
-		}
-
-		else if(!empty($_SESSION['database']) ){
-			$database=$_SESSION['database'];
-		}
-
-		else{
-			$database='';
-		}
-
-		$db=null;
 		
-		try{
-			
-		}
-		catch (Exception $e){
-			if($db !== null){
+		if( ! parent::pre_filter($methodName)){
 				
+			if(in_array($methodName, array(strtolower('selectTableOrSubquery')))){
+				
+				$this->reportErrorByAjax("Session Expired!");
 			}
-		}
-		$dbs=get_all_database();
-		
-		if(!empty($database)){
+			else{
+				
+				redirect("/");
+			}
 			
+			return false;
+		}
+
+
+
+	}
+
+	public function post_filter($methodName){
+		parent::post_filter($methodName);
+	}
+
+
+
+	public function selectTableOrSubquery(){
+
+
+		try {
+			
+			$tables=get_all_tables($_SESSION['main_database']);
+				
+			if(!empty($database)){
+
+			}
+		} catch (Exception $e) {
+			
+			logException($e);
+			$this->reportErrorByAjax($e->getMessage());
+			return;
 		}
 
 	}

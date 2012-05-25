@@ -24,13 +24,7 @@ var select_job_id='{$select_job_id}';
 				<textarea id="select_result_text"></textarea>
 			</div>
 			<div id="select_represent_area">
-				<div class="sql_clause float_left_element sql_element">
-					<div class="sql_keyword float_left_element sql_element">select</div>
-					<div class="sql_column float_left_element sql_element">*</div>
-					<div class="sql_keyword float_left_element sql_element">from</div>
-					<div
-						class="sql_table float_left_element sql_element waitting_insert"></div>
-				</div>
+				
 			</div>
 			<div id="select_design_area"></div>
 		</div>
@@ -81,4 +75,23 @@ var select_job_id='{$select_job_id}';
 	</div>
 	<!-- end delete_area -->
 	<br />
+</div>
+
+
+
+<div
+	id="select_talbe_or_sub_query" class="user_select_dialog"></div>
+
+<div id="basic_select_query" class="hide">
+	<div class="sql_clause float_left_element">
+		<div class="sql_keyword float_left_element sql_element uneditable">SELECT</div>
+		<div class="sql_column float_left_element sql_element editable">*</div>
+		<div class="sql_keyword float_left_element sql_element uneditable">FROM</div>
+		<div
+			class="sql_table_or_sub_query float_left_element sql_element waitting_insert required"></div>
+	</div>
+</div>
+
+<div id='waitting_icon' class="hide">
+<img alt="" src="/images/loading.gif" width="50px" height="50px">
 </div>
