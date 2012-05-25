@@ -90,21 +90,24 @@ $controller=new $className;
 
 
 try {
+	$preResult=true;
 	if(method_exists($controller,'pre_filter')){
 
-		$controller->pre_filter();
+		$preResult=$controller->pre_filter($method);
 	}
 
 
-	$smarty->assign('title',"{$className}->{$method}");
+	if( $preResult !== false){
 
-	$controller->$method($parameters);
+		$smarty->assign('title',"{$className}->{$method}");
 
+		$controller->$method($parameters);
 
+	}
 
 	if(method_exists($controller,'post_filter')){
 
-		$controller->post_filter();
+		$controller->post_filter($method);
 	}
 
 
@@ -277,20 +280,20 @@ function smarty_plugin_func_dec_include($parameters,$smarty){
 		try {
 			ob_start();
 
-				
+
 
 			$smarty->display($path);
 			$content = ob_get_contents();
 			ob_end_clean();
-			
-			
+
+
 		} catch (Exception $e) {
-				
+
 			error_log("Exception:".$e->getMessage().' in file:'.$e->getFile().' line ['.$e->getLine().']');
 		}
 			
 	}
-	
+
 	return $content;
 
 

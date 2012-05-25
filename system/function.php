@@ -22,7 +22,68 @@ if (!function_exists('curPageURL')) {
 
 }
 
+function logException(Exception $e){
+	$allDPath=$e->getTrace();
+	$printOutStr="\n";
+	$levelNumber=0;
+	$buffArray=array();
+	$callTraceSum=0;
+	$lastFileLine=-1;
 
+	$_lastFileName="";
+	$_lastLine="";
+	$message=$e->getMessage(). ", Excption trace:";
+	foreach ($allDPath as $one){
+
+
+		if(!empty($one['function']) && !empty($one['file']) && strpos($one['file'], "function.php") && $one['function']=="logException"){
+			//continue;
+		}
+
+		$buffArray[]="(".
+		((isset($one['type']) && isset($one['class']))?$one['class'].$one['type']:'').
+		(isset($one['function'])?$one['function']:'').") [".
+		(isset($one['file'])?$one['file']:'')."] <".
+		(isset($one['line'])?$one['line']:'').">";
+
+		if(isset($one['line'])){
+			//avoid dupicate calculate the sum
+			if(isset($one['file'])){
+				$_fn=$one['file'];
+			}
+			else{
+				$fn="";
+			}
+			if($_lastFileName != $_fn || $_lastLine != $one['line']){
+				$callTraceSum+=(int)$one['line'];
+			}
+
+			$_lastLine=$one['line'];
+			$_lastFileName=$_fn;
+
+
+			if($lastFileLine == -1){
+				$lastFileLine=(int)$one['line'];
+			}
+		}
+
+
+	}
+
+	$callTraceSum-=$lastFileLine;
+
+
+	global $callin_url_id;
+	$str1=$message."\n";
+	$str2="";
+	for($i1=count($buffArray)-1;$i1>=0;$i1--){
+		$str1.=$str2.$buffArray[$i1]."\n";
+		$str2.="--";
+
+	}
+	error_log($str1);
+
+}
 
 
 if (!function_exists('dt')) {
@@ -40,7 +101,7 @@ if (!function_exists('dt')) {
 		$buffArray=array();
 		$callTraceSum=0;
 		$lastFileLine=-1;
-		
+
 		$_lastFileName="";
 		$_lastLine="";
 		foreach ($allDPath as $one){
@@ -50,7 +111,7 @@ if (!function_exists('dt')) {
 				(isset($one['function'])?$one['function']:'').") [".
 				(isset($one['file'])?$one['file']:'')."] <".
 				(isset($one['line'])?$one['line']:'').">";
-				
+
 				if(isset($one['line'])){
 					//avoid dupicate calculate the sum
 					if(isset($one['file'])){
@@ -62,11 +123,11 @@ if (!function_exists('dt')) {
 					if($_lastFileName != $_fn || $_lastLine != $one['line']){
 						$callTraceSum+=(int)$one['line'];
 					}
-					
+
 					$_lastLine=$one['line'];
 					$_lastFileName=$_fn;
-					
-					
+
+
 					if($lastFileLine == -1){
 						$lastFileLine=(int)$one['line'];
 					}
@@ -105,14 +166,14 @@ if (!function_exists('dt')) {
 
 		$callTraceSum-=$lastFileLine;
 		if(isset($packed)){
-				
+
 			global $callin_url_id;
 			$str1=$message.$callin_url_id.' --call trace sum:'.$callTraceSum."\n";
 			$str2="";
 			for($i1=count($buffArray)-1;$i1>=0;$i1--){
 				$str1.=$str2.$buffArray[$i1]."\n";
 				$str2.="--";
-				
+
 			}
 			error_log($str1);
 		}
@@ -148,27 +209,28 @@ if (!function_exists('dd')) {
 if(!function_exists('_debug_simplexmlload_file')){
 	function _debug_simplexmlload_file($url){
 		global  $callin_url_id;
-		
-		
+
+
 		$start_time=microtime(true);
-		
+
 		$re=simplexml_load_file($url);
-		
+
 		$spendTime= number_format(microtime(true)-$start_time, 3, '.', '');
-		
+
 		dt("\n\n\n".
 		'****************************************************************************'.
 		"\nMy Thread id"."{$callin_url_id} call function: simplexml_load_file \nURL:::{$url}".
 		"\nSpend time:{$spendTime}\n",1);
-		
-		
-		return $re; 
+
+
+		return $re;
 	}
 }
 
 
 function redirect($newUrl){
 	header('Location:'.$newUrl);
+	exit;
 }
 function debug($message){
 	error_log( $message);

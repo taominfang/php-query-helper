@@ -103,14 +103,14 @@ function getDbInfoFromUser(){
 	$db= new mysqli($host,$user,$password,'',$port);
 
 	if($db === null || $db === false || !is_object($db) || $db->connect_errno){
-		
+
 		if(is_object($db) &&  $db->connect_error){
 			throw new Exception("Connect error for {$user}@{$host} ,error message from db:{$db->connect_error}");
 		}
 		else{
 			throw new Exception("Connect error for {$user}@{$host}");
 		}
-		
+
 	}
 	$db->close();
 
@@ -124,9 +124,10 @@ function getDbInfoFromUser(){
 
 /*
  * get a mysqli object from $_SESSION
- */
-function getDBFromSession(){
+*/
+function getDBFromSession($database=null){
 
+	dd($database,'db	');
 	if( empty($_SESSION['host'])){
 		throw new Exception('host is required');
 
@@ -158,14 +159,15 @@ function getDBFromSession(){
 		$port='3306';
 	}
 
-	if(!empty($_SESSION['database']) ){
-		$database=$_SESSION['database'];
+	if(empty($database)){
+		if(!empty($_SESSION['database']) ){
+			$database=$_SESSION['database'];
+		}
+		else{
+			$database='';
+		}
 	}
-	else{
-		$database='';
-	}
-
-	$db= @mysqli_connect($host,$user,$password,'',$port);
+	$db= @mysqli_connect($host,$user,$password,$database,$port);
 
 	if($db === null || $db->connect_errno){
 		throw new Exception("Connect error for {$user}@{$host} ,error message from db:{$db->connect_error}");
@@ -176,25 +178,51 @@ function getDBFromSession(){
 /*
  * get all database name
 */
-	
+
 function get_all_database($db=null){
 	if($db === null){
 		$db=getDBFromSession();
 		$closeFlag=1;
 	}
-	
+
 	$_dbs=fetch_arrays_from_sql($db, "show databases");
-	
+
 	if(isset($closeFlag)){
 		$db->close();
 	}
 	$dbs=array();
-	
+
 	foreach($_dbs as $row){
-	
+
 		$dbs[]=array('name'=>$row[0]);
 	}
 	return $dbs;
 }
+
+/*
+ * get all tables name
+*/
+
+function get_all_tables($database,$db=null){
+	if($db === null){
+		$db=getDBFromSession($database);
+		$closeFlag=1;
+	}
+
+	$_dbs=fetch_arrays_from_sql($db, "show tables");
+
+	if(isset($closeFlag)){
+		$db->close();
+	}
+	$tables=array();
+
+	foreach($_dbs as $row){
+
+		$tables[]=array('name'=>$row[0]);
+	}
+	return $tables;
+}
+
+
 
 
