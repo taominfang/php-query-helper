@@ -37,11 +37,11 @@ function fetch_arrays_from_sql($db,$sql){
 
 
 function run_sql($db,$sql,$mode=MYSQLI_STORE_RESULT){
-	debug($sql);
+	Log::d($sql);
 	$st=microtime(true);
 	$result=$db->query($sql,$mode);
 	$sp=sprintf('%.3f',(microtime(true)-$st));
-	debug("The sql Spend {$sp} seconds");
+	Log::d("The sql Spend {$sp} seconds");
 	if(!$result){
 		throw new Exception("SQL :[$sql] is wrong, error message from mysql:{$db->error}");
 	}
@@ -127,7 +127,7 @@ function getDbInfoFromUser(){
 */
 function getDBFromSession($database=null){
 
-	dd($database,'db	');
+	
 	if( empty($_SESSION['host'])){
 		throw new Exception('host is required');
 

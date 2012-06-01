@@ -2,6 +2,7 @@
 
 
 include_once 'function.php';
+include_once 'log.php';
 
 
 $smarty_template_dir=$_SERVER['DOCUMENT_ROOT'].'/smarty/templates';
