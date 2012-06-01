@@ -5,8 +5,7 @@ class IndexController extends BasicController{
 
 	public function index(){
 
-
-
+		
 		if(empty($_SESSION['user'])){
 			$this->set('user','');
 		}
@@ -41,12 +40,12 @@ class IndexController extends BasicController{
 		try {
 
 			getDbInfoFromUser();
-				
-				
+
+
 
 			$dbs=get_all_database();
 
-				
+
 
 			$this->set('dbs', $dbs);
 
@@ -68,12 +67,12 @@ class IndexController extends BasicController{
 	}
 
 	function generate(){
-		
+
 		if(empty($_REQUEST['main_database'])){
 			$this->reportError("main_database is required !");
 			return;
 		}
-		
+
 		else{
 			$_SESSION['main_database'] = $_REQUEST['main_database'];
 		}
@@ -84,7 +83,7 @@ class IndexController extends BasicController{
 		else{
 			$select_job_id=uniqid('sel_job_');
 		}
-		
+
 		$this->set('select_job_id', $select_job_id);
 	}
 }

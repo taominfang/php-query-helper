@@ -5,6 +5,9 @@ class DbinfoController extends BasicController{
 	public function pre_filter($methodName=null){
 
 
+		Log::d("heloow",'abcd');
+		Log::callingTrace();
+		// those veriable should be find in $_SESSION
 		$this->required_in_session=array("main_database",'host','user','password');
 
 
@@ -12,10 +15,11 @@ class DbinfoController extends BasicController{
 		if( ! parent::pre_filter($methodName)){
 				
 			if(in_array($methodName, array('select_table_or_subquery'))){
-				
+				//return to ajax error message
 				$this->reportErrorByAjax("Session Expired!");
 			}
 			else{
+				//not ajax, so redirect the browser 
 				
 				redirect("/");
 			}

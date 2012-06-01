@@ -21,7 +21,7 @@
 				</td>
 				<td>Sub query</td>
 				<td><input name="table_selector" type="text"
-					id="{$random}_table_selector_alias_sub_query">
+					id="{$random}_table_selector_alias_sub_query" value="t1">
 				</td>
 			</tr>
 			{foreach from=$tables item=i name=foo}
@@ -30,7 +30,7 @@
 				<td><input name="table_selector" type="radio"
 					class="table_select_radio_class"
 					id="{$random}_table_selector_radio_t{$smarty.foreach.foo.index}"
-					table_name='{$i.name}'>
+					table_name='{$i.name}' myindex={$smarty.foreach.foo.index}>
 				</td>
 				<td>{$i.name}</td>
 				<td><input name="table_selector" type="text"

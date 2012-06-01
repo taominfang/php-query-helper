@@ -83,7 +83,10 @@ function init_click_events() {
 																	} else {
 																		// some
 																		// table
-																		preview = "tables";
+																		tableName=$(this).attr('table_name');
+																		aliasId=random+'_table_selector_alias_t'+$(this).attr('myindex');
+																		aliasName=$('#'+aliasId).val();
+																		preview = "`"+tableName+"` as `"+aliasName+'`';
 																	}
 
 																	$(
