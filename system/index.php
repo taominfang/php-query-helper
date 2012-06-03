@@ -5,9 +5,11 @@ include_once 'function.php';
 include_once 'log.php';
 
 
-$smarty_template_dir=$_SERVER['DOCUMENT_ROOT'].'/smarty/templates';
+define ( '__project_root__', dirname(__FILE__)."/.." );
 
-require($_SERVER['DOCUMENT_ROOT'].'/smarty/configs/smartmain.php');
+$smarty_template_dir=__project_root__.'/smarty/templates';
+
+require(__project_root__.'/smarty/configs/smartmain.php');
 
 
 
