@@ -1,3 +1,6 @@
+
+var query_str,insert_position;
+
 function closeAllOpen() {
 	$('.real_query_area').hide();
 	$('.title_open').show();
@@ -37,7 +40,15 @@ $(document).ready(function() {
 	$('#popup_dialog').dialog({
 		autoOpen : false,
 		title : "Select sub query or a table",
-		modal : true
+		modal : true,
+		buttons : [ {
+			text : "Ok",
+			click : function() {
+				insert_position.html(query_str);
+				insert_position.removeClass('waitting_insert');
+				$(this).dialog("close");
+			}
+		} ]
 	});
 
 	insert_basic_select_query('select_design_area');
@@ -54,6 +65,8 @@ function init_click_events() {
 						if ($(this).hasClass('sql_table_or_sub_query')) {
 							$('#ajax_content').html('');
 							insert_html('ajax_content', 'waitting_icon');
+							query_str="";
+							insert_position=$(this);
 							$('#popup_dialog').dialog('open');
 
 							$('#ajax_content')
@@ -79,20 +92,35 @@ function init_click_events() {
 																			.indexOf('sub_query') > 0) {
 																		// sub
 																		// query
-																		preview = "abcd";
+																		query_str = "abcd";
 																	} else {
 																		// some
 																		// table
-																		tableName=$(this).attr('table_name');
-																		aliasId=random+'_table_selector_alias_t'+$(this).attr('myindex');
-																		aliasName=$('#'+aliasId).val();
-																		preview = "`"+tableName+"` as `"+aliasName+'`';
+																		tableName = $(
+																				this)
+																				.attr(
+																						'table_name');
+																		aliasId = random
+																				+ '_table_selector_alias_t'
+																				+ $(
+																						this)
+																						.attr(
+																								'myindex');
+																		aliasName = $(
+																				'#'
+																						+ aliasId)
+																				.val();
+																		query_str = "`"
+																				+ tableName
+																				+ "` as `"
+																				+ aliasName
+																				+ '`';
 																	}
 
 																	$(
 																			'#table_selecor_preview_area')
 																			.html(
-																					preview);
+																					query_str);
 
 																});
 											});

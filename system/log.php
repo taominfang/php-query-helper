@@ -49,7 +49,7 @@ class Log{
 		if($i1 == 0){
 			return;
 		}
-		error_log("Total:".$i1);
+		
 
 		self::dd($printArray);
 
