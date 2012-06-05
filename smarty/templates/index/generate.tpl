@@ -88,7 +88,7 @@ var select_job_id='{$select_job_id}';
 		<div class="sql_column float_left_element sql_element editable">*</div>
 		<div class="sql_keyword float_left_element sql_element uneditable">FROM</div>
 		<div
-			class="sql_table_or_sub_query float_left_element sql_element waitting_insert required"></div>
+			class="sql_table_or_sub_query float_left_element sql_element waitting_insert clickable required"></div>
 	</div>
 </div>
 

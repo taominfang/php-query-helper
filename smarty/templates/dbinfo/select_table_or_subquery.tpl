@@ -20,7 +20,7 @@
 					id="{$random}_table_selector_radio_sub_query">
 				</td>
 				<td>Sub query</td>
-				<td><input name="table_selector" type="text"
+				<td><input name="table_selector" type="text" class="query_table_alias_changable"
 					id="{$random}_table_selector_alias_sub_query" value="t1">
 				</td>
 			</tr>
@@ -33,7 +33,7 @@
 					table_name='{$i.name}' myindex={$smarty.foreach.foo.index}>
 				</td>
 				<td>{$i.name}</td>
-				<td><input name="table_selector" type="text"
+				<td><input name="table_selector" type="text" class="query_table_alias_changable" index="{$smarty.foreach.foo.index}"
 					id="{$random}_table_selector_alias_t{$smarty.foreach.foo.index}"
 					value='{$i.name}'>
 				</td>

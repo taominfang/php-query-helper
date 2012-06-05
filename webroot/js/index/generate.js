@@ -1,5 +1,6 @@
+var query_str, insert_position,current_id;
 
-var query_str,insert_position;
+var mydb;
 
 function closeAllOpen() {
 	$('.real_query_area').hide();
@@ -36,97 +37,111 @@ function closeArea(name) {
 
 $(document).ready(function() {
 
+	mydb={};
 	// $('#select_query_area').load('/generator/query?job_id='+select_job_id);
 	$('#popup_dialog').dialog({
 		autoOpen : false,
 		title : "Select sub query or a table",
 		modal : true,
+		width : 400,
 		buttons : [ {
 			text : "Ok",
 			click : function() {
 				insert_position.html(query_str);
+
 				insert_position.removeClass('waitting_insert');
+
+				if (!insert_position.hasClass('editable')) {
+					insert_position.addClass('editable');
+				}
+
 				$(this).dialog("close");
 			}
 		} ]
 	});
 
 	insert_basic_select_query('select_design_area');
-	init_click_events();
+	init_events();
 
 });
 
-function init_click_events() {
+function generate_query_clause(radioId) {
+	
+	console.log('radioId:'+radioId);
+	if(radioId.indexOf('table_selector_radio') <0){
+		return;
+	}
+	
+	random = $('#table_selector_table_id').attr('random');
 
-	$('.waitting_insert')
-			.on(
-					'click',
+	
+	if (radioId.indexOf('sub_query') > 0) {
+		// sub
+		// query
+		query_str = "abcd";
+	} else {
+		// some
+		// table
+		tableName = $('#'+radioId).attr('table_name');
+		aliasId = random + '_table_selector_alias_t' + $('#'+radioId).attr('myindex');
+		aliasName = $('#' + aliasId).val();
+		query_str = "`" + tableName + "` as `" + aliasName + '`';
+		console.log(query_str);
+	}
+
+	$('#table_selecor_preview_area').html(query_str);
+}
+
+function inserting_table_or_sub_query(divObject) {
+	$('#ajax_content').html('');
+	insert_html('ajax_content', 'waitting_icon');
+	query_str = "";
+	insert_position = divObject;
+	$('#popup_dialog').dialog('open');
+
+	$('#ajax_content')
+			.load(
+					'/dbinfo/select_table_or_subquery',
 					function() {
-						if ($(this).hasClass('sql_table_or_sub_query')) {
-							$('#ajax_content').html('');
-							insert_html('ajax_content', 'waitting_icon');
-							query_str="";
-							insert_position=$(this);
-							$('#popup_dialog').dialog('open');
+						// when user select a option
 
-							$('#ajax_content')
-									.load(
-											'/dbinfo/select_table_or_subquery',
-											function() {
-												// when user select a option
+						$('.table_select_radio_class').on('click',
+								function(){
+							generate_query_clause($(this).attr('id'));
+						});
 
-												$('.table_select_radio_class')
-														.on(
-																'click',
-																function() {
-																	random = $(
-																			'#table_selector_table_id')
-																			.attr(
-																					'random');
-																	radioId = $(
-																			this)
-																			.attr(
-																					'id');
+						$('.query_table_alias_changable')
+								.on(
+										'change',
+										function() {
 
-																	if (radioId
-																			.indexOf('sub_query') > 0) {
-																		// sub
-																		// query
-																		query_str = "abcd";
-																	} else {
-																		// some
-																		// table
-																		tableName = $(
-																				this)
-																				.attr(
-																						'table_name');
-																		aliasId = random
-																				+ '_table_selector_alias_t'
-																				+ $(
-																						this)
-																						.attr(
-																								'myindex');
-																		aliasName = $(
-																				'#'
-																						+ aliasId)
-																				.val();
-																		query_str = "`"
-																				+ tableName
-																				+ "` as `"
-																				+ aliasName
-																				+ '`';
-																	}
-
-																	$(
-																			'#table_selecor_preview_area')
-																			.html(
-																					query_str);
-
-																});
-											});
-
-						}
+											mRadioId = $(this)
+													.attr('id')
+													.replace(
+															'table_selector_alias',
+															'table_selector_radio');
+											console.log(mRadioId);
+											checked=$('#' + mRadioId).attr("checked");
+											console.log(checked);
+											if (checked == 'checked') {
+												generate_query_clause(mRadioId);
+											}
+										});
 					});
+
+}
+
+function init_events() {
+
+	$('.clickable').on('click', function() {
+		if ($(this).hasClass('sql_table_or_sub_query')) {
+
+			if ($(this).hasClass('waitting_insert')) {
+				inserting_table_or_sub_query($(this));
+			}
+
+		}
+	});
 
 }
 
