@@ -1,5 +1,10 @@
- {html_css src="generate"} {html_css src="/common/common"} {html_script
-src="generate"}
+ {html_css src="generate"} 
+{html_css src="/common/common"} 
+{html_script src="generate"}
+{html_script src="/common/general_function"}
+{html_script src="/common/dataObject"}
+
+
 
 
 <script type="text/javascript">
@@ -9,6 +14,7 @@ var select_job_id='{$select_job_id}';
 </script>
 
 <div>
+
 
 	<!-- -----------select_area --------------------------- -->
 	<div id='select_area' class="query_area">

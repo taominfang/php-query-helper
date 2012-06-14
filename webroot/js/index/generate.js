@@ -60,7 +60,8 @@ $(document).ready(function() {
 		} ]
 	});
 
-	insert_basic_select_query('select_design_area');
+	//insert_basic_select_query('select_design_area');
+	$('#select_design_area').html(query_root.toHtml());
 	init_events();
 
 });
