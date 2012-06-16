@@ -1,5 +1,5 @@
 //defined a basic element class and it's construct function
-
+var my_debug=true;
 function QueryElement(parentId) {
 	this.id = my_uuid();
 	this.type = "abstract";
@@ -10,6 +10,7 @@ function QueryElement(parentId) {
 	this.tree_level = 0;
 	this.style_classes = [ 'query_element' ];
 	this.alias_name = "";
+	this.editable = true;
 	this.depends = [ parentId ];
 }
 
@@ -20,7 +21,7 @@ QueryElement.prototype = {
 	},
 
 	statistic : function(collectSet) {
-		collectSet[this.getID()] = this;
+		collectSet.value[this.getID()] = this;
 	},
 
 	printNameToHtml : function() {
@@ -28,7 +29,8 @@ QueryElement.prototype = {
 			return '';
 		} else {
 			return "<div class='query_print_name query_element'>"
-					+ this.spaceToHtml()
+					//+ this.spaceToHtml()
+					
 					+ "<span class='span_query_print_name'>" + this.print_name
 					+ "</span></div>";
 		}
@@ -42,17 +44,23 @@ QueryElement.prototype = {
 		}
 		if (this.required) {
 			re += 'query_required ';
+
 		} else {
-			re += 'query_unrequired ';
+			re += 'query_norequired ';
+
 		}
-		
-		if(this.ready){
-			
+
+		if (this.ready) {
+
 			re += 'query_ready ';
 		} else {
 			re += 'query_noready ';
 		}
-		
+
+		if (this.editable) {
+
+			re += 'query_editable ';
+		}
 
 		re += "query_tree_level_" + this.tree_level + " ";
 		return re;
@@ -66,7 +74,11 @@ QueryElement.prototype = {
 		return re;
 	},
 	divTailerToHtml : function() {
-		return "</div><!-- end div " + this.id + " -->";
+		var re= "</div>";
+		if(my_debug){
+			re+="<!-- end div " + this.id + " -->";
+		}
+		return re;
 	},
 
 	spaceToHtml : function() {
@@ -91,6 +103,12 @@ QueryElement.prototype = {
 
 	extraTailer : function() {
 		return '';
+	},
+
+	log : function(str) {
+		if(my_debug){
+			console.log(str);
+		}
 	}
 
 }
@@ -112,20 +130,7 @@ function QueryField(parentId, tableId, filedName, aliasName) {
 
 QueryField.prototype = new QueryElement();
 
-// // query table class
 
-function QueryTable(parentId, tableName, aliasName) {
-	QueryElement.call(this, parentId);
-	this.type = 'field';
-	this.table_name = tableName;
-	if (aliasName == undefined || aliasName == "") {
-		this.alias_name = tableName;
-	} else {
-		this.alias_name = aliasName;
-	}
-
-}
-QueryTable.prototype = new QueryElement();
 
 // defined the constant class
 function QueryConstant(parentId, printName) {
@@ -150,6 +155,7 @@ function QueryClause(parentId) {
 QueryClause.prototype = new QueryElement();
 
 QueryClause.prototype.setTreeLevel = function(l) {
+	this.log("levle:" + l + " type:" + this.type + " id:" + this.id);
 	this.tree_level = l;
 	l++;
 	for (x in this.elements) {
@@ -165,7 +171,9 @@ QueryClause.prototype.toHtml = function() {
 
 	for (index in this.elements) {
 
-		re += this.elements[index].toHtml();
+		re+=this.spaceToHtml()+this.elements[index].toHtml();
+		
+		
 	}
 	re += this.extraTailer();
 	re += this.divTailerToHtml();
@@ -177,12 +185,17 @@ QueryClause.prototype.statistic = function(collectSet) {
 		this.elements[index].statistic(collectSet);
 	}
 }
+
+QueryClause.prototype.spaceToHtml = function() {
+	return "<div class='query_clause_space query_element'>&nbsp;</div>";
+}
 // //////////// FIELDS CLUASE
 function QueryClauseFields(parentId) {
 	QueryClause.call(this, parentId);
+	this.type="clause_fields";
 	this.can_empty = false;
 	this.ready = true;
-	this.required=true;
+	this.required = true;
 	this.elements.push(new QueryField(this.getID(), '', '', ''));
 }
 QueryClauseFields.prototype = new QueryClause();
@@ -191,9 +204,10 @@ QueryClauseFields.prototype = new QueryClause();
 
 function QueryClauseFrom(parentId) {
 	QueryClause.call(this, parentId);
+	this.type="clause_from"
 	this.ready = false;
 	this.can_empty = false;
-	this.required=true;
+	this.required = true;
 	this.print_name = "FROM";
 }
 QueryClauseFrom.prototype = new QueryClause();
@@ -201,13 +215,36 @@ QueryClauseFrom.prototype = new QueryClause();
 // //////////// WHERE CLAUSE
 function QueryClauseWhere(parentId) {
 	QueryClause.call(this, parentId);
+	this.type="clause_where"
+	this.print_name = "W";
+	this.ready = false;
+	this.required = false;
+	this.can_empty = false;
+
 }
 QueryClauseWhere.prototype = new QueryClause();
+
+// //////////// Group by CLAUSE
+function QueryClauseGroupBy(parentId) {
+	QueryClause.call(this, parentId);
+	this.type="clause_groupby"
+	this.print_name = "G";
+	this.ready = false;
+	this.required = false;
+	this.can_empty = false;
+
+}
+QueryClauseGroupBy.prototype = new QueryClause();
 
 // /////////// ORDER CLAUSE
 
 function QueryClauseOrder(parentId) {
 	QueryClause.call(this, parentId);
+	this.type="clause_order"
+	this.print_name = "O";
+	this.ready = false;
+	this.required = false;
+	this.can_empty = false;
 }
 QueryClauseOrder.prototype = new QueryClause();
 
@@ -215,25 +252,51 @@ QueryClauseOrder.prototype = new QueryClause();
 
 function QueryClauseLimit(parentId) {
 	QueryClause.call(this, parentId);
+	this.type="clause_limit"
+	this.print_name = "L";
+	this.ready = false;
+	this.required = false;
+	this.can_empty = false;
 }
 QueryClauseLimit.prototype = new QueryClause();
 // ////////////SELECT CLUASE
 
 function QueryClauseSelect(parentId) {
 	QueryClause.call(this, parentId);
-	this.type = "select_clause";
+	this.type = "clause_select";
 	this.print_name = "SELECT";
-	this.can_empty=false;
-	this.ready=false;
+	this.can_empty = false;
+	this.ready = false;
+	this.editable = false;
 
 	this.elements.push(new QueryClauseFields(this.id));
 	this.elements.push(new QueryClauseFrom(this.id));
+	this.elements.push(new QueryClauseWhere(this.id));
+	this.elements.push(new QueryClauseGroupBy(this.id));
+	this.elements.push(new QueryClauseOrder(this.id));
+	this.elements.push(new QueryClauseLimit(this.id));
+
 }
 QueryClauseSelect.prototype = new QueryClause();
 
+// //
+
+function reinitVariablesFromTree(__collect, __tree) {
+	__collect.value = {};
+	__tree.setTreeLevel(1);
+	__tree.statistic(__collect);
+}
+
 // create a object
+var root_collect = {
+	value : ''
+};
 var root_id = my_uuid();
 var query_root = new QueryClauseSelect(root_id);
-query_root.required=true;
-var root_collect = {};
-query_root.statistic(root_collect);
+query_root.required = true;
+
+reinitVariablesFromTree(root_collect, query_root);
+
+function findQueryElementById(id){
+	return root_collect.value[id];
+}

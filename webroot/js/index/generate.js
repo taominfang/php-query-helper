@@ -61,7 +61,7 @@ $(document).ready(function() {
 	});
 
 	//insert_basic_select_query('select_design_area');
-	$('#select_design_area').html(query_root.toHtml());
+	load_query();
 	init_events();
 
 });
@@ -134,16 +134,41 @@ function inserting_table_or_sub_query(divObject) {
 
 function init_events() {
 
-	$('.clickable').on('click', function() {
-		if ($(this).hasClass('sql_table_or_sub_query')) {
+	$('.query_editable').on('click', function() {
 
-			if ($(this).hasClass('waitting_insert')) {
-				inserting_table_or_sub_query($(this));
-			}
-
+		var divId=$(this).attr('id');
+		var qObj=findQueryElementById(divId);
+		console.log(divId);
+		if(qObj == undefined || qObj == null){
+			return;
 		}
+		
+		console.log("type:"+qObj.type);
+		switch(qObj.type){
+		case 'clause_from':
+			console.log("type2:"+qObj.type);
+			$('#popup_dialog').dialog('open')
+			break;
+		}
+
 	});
 
+}
+
+function load_query(){
+	$('#select_design_area').html(query_root.toHtml());
+	$('.query_editable').each(function(){
+		
+		if($(this).hasClass('query_ready')){
+			$(this).addClass('query_can_edit');
+		}
+		else if($(this).hasClass('query_required')){
+			$(this).addClass('query_is_required');
+		}
+		else{
+			$(this).addClass('query_is_option');
+		}
+	});
 }
 
 function insert_basic_select_query(target_div_id) {
