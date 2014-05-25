@@ -40,7 +40,6 @@ if (!empty($uris[2])) {
     $method = 'index';
 }
 
-Log::d("class:{$controllerName}  method:{$method} cp:{$classPath} cn:{$className}");
 
 
 if (!is_file($classPath)) {
@@ -106,8 +105,7 @@ try {
 
 
     $view->rendering();
-    
-    Log::d("ok");
+
 } catch (Exception $e) {
     Log::eException($e);
     $view->assign('errorMessage', "Exception:" . $e->getMessage() . ' in file:' . $e->getFile() . ' line [' . $e->getLine() . ']');

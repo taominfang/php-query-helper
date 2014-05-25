@@ -3,12 +3,16 @@
 class BasicController {
 
 
-   
+
     protected $view;
     protected $required_in_session = array();
 
     public function setView($v) {
         $this->view=$v;
+    }
+
+    public function setLayout($layout_name) {
+        $this->view->setLayout($layout_name);
     }
 
     public function pre_filter(&$methodName = null) {
@@ -31,13 +35,16 @@ class BasicController {
     }
 
     public function post_filter(&$methodName = null) {
-        
+
     }
 
     public function set($pName, $pValue) {
-       
+
         $this->view->set($pName, $pValue);
     }
+
+    
+
 
 
 

@@ -1,17 +1,19 @@
 <html>
-    
+
     <head>
-        <title><?=$this->title?></title>
-        <?=$this->scripts;?>
-        <?=$this->styles;?>
+        <title><?= $this->title ?></title>
+        <?= $this->scripts; ?>
+        <?= $this->styles; ?>
+
         
-       
+
     </head>
-    
+
     <body>
-       
-        <?=$this->content;Log::d($this->content);?>
-        
-        
+
+        <?= $this->content; ?>
+
+        <div id="ajax_loading"></div>
+
     </body>
 </html>

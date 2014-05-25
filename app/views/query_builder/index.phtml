@@ -1,0 +1,13 @@
+<script type="text/javascript" >
+    $(document).ready(function() {
+        $('#ajax_loading').load('<?=$this->popUrl("example/ajax")?>');
+    });
+</script>
+
+<?= $this->exa1 ?>
+
+<p/>
+
+<? foreach ($this->exa2 as $one): ?>
+    <h3><?= $one ?></h3>
+<? endforeach; ?>
