@@ -63,7 +63,7 @@ include_once $classPath;
 if (!class_exists($className)) {
 
     $view->assign('errorMessage', "Can not find class [{$className}]  in the file [{$classPath}]");
-    $view->display('error/general_error.tpl');
+    $view->display('error/general_error.phtml');
     return;
 }
 
@@ -71,7 +71,7 @@ if (!class_exists($className)) {
 if (!method_exists($className, $method)) {
 
     $view->assign('errorMessage', "Can not find method [{$method}] in class [{$className}]  in the file [{$classPath}]");
-    $view->display('error/general_error.tpl');
+    $view->display('error/general_error.phtml');
     return;
 }
 
