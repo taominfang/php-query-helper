@@ -1,0 +1,54 @@
+/*
+    Document   : logic_edit
+    Created on : May 28, 2014, 2:21:09 PM
+    Author     : mtao60
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+root {
+    display: block;
+}
+
+.levelMode0{
+    background-color: #0069aa;
+}
+.levelMode1{
+    background-color: #646e98;
+}
+.levelMode2{
+    background-color: #009fc2;
+}
+.levelMode3{
+    background-color: #d8eaed;
+}
+
+.logic_div{
+    float: none;
+    margin-top: 30px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    padding-left: 10px;
+    padding-top: 10px;
+
+    color: #ffffff;
+}
+
+.logic_div_hint{
+    font-size: small;
+
+    margin-left: 20px;
+}
+
+.logic_div_unfinished_alert{
+    color: red;
+    font-size: medium;
+    margin-left: 20px;
+}
+
+
+.logic_div_desc{
+    color: yellow;
+    font-size: medium;
+    margin-left: 20px;
+}

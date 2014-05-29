@@ -1,0 +1,55 @@
+<div id="logic_edit_dialog" style="display: none">
+    <button class="logic_edit_dialog_convert_bt" id="logic_edit_dialog_delete_bt">Delete</button>
+    <button class="logic_edit_dialog_convert_bt" id="logic_edit_dialog_cleft_bt">Convert it to left node</button>
+    <button class="logic_edit_dialog_convert_bt" id="logic_edit_dialog_cright_bt">Convert it to right node</button>
+    <button class="logic_edit_dialog_convert_bt" id="logic_edit_dialog_cand_bt">Convert it to And node</button>
+    <button class="logic_edit_dialog_convert_bt" id="logic_edit_dialog_cor_bt">Convert it to Or node</button>
+
+    <hr/>
+    <input type="checkbox" >reverse
+
+    <br/>
+    Description:<input type="text" id="logic_edit_dialog_desc">
+    <br/>
+    <div id="logic_edit_dialog_condition_edit">
+
+        <table>
+            <tr>
+                <td >
+                    <select id="logic_edit_dialog_left_options" class='logic_edit_dialog_left_option'></select>
+                </td>
+                <td >
+                    <select id="logic_edit_dialog_logic_options" class='logic_edit_dialog_logic_option'>
+                        <option value="=">=</option>
+                        <option value="!=">!=</option>
+                        <option value="<">&lt;</option>
+                        <option value=">">&gt;</option>
+                        <option value="<=">&lt;=</option>
+                        <option value=">=">&gt;=</option>
+                        <option value="IN">IN</option>
+                        <option value="LIKE">LIKE</option>
+                        <option value="BETWEEN">BETWEEN</option>
+                        <option value="IS NULL">IS NULL</option>
+                        <option value="IS NOT NULL">IS NOT NULL</option>
+                        <option value="custom_value">CUSTOM</option>
+
+
+                    </select>
+                </td>
+                <td >
+                    <select id="logic_edit_dialog_right_options" class='logic_edit_dialog_right_option'></select>
+                </td>
+                <td >
+                    <select id="logic_edit_dialog_extra_options" style="display: none" class='logic_edit_dialog_extra_option'></select>
+                </td>
+            </tr>
+
+            <tr>
+                <td><input id='logic_edit_dialog_left_value' class='logic_edit_dialog_left_option'></td>
+                <td><input id='logic_edit_dialog_logic_value' class='logic_edit_dialog_logic_option'></td>
+                <td><input id='logic_edit_dialog_right_value' class='logic_edit_dialog_right_option'></td>
+                <td><input id='logic_edit_dialog_extra_value' style="display: none"  class='logic_edit_dialog_extra_option'></td>
+            </tr>
+        </table>
+    </div>
+</div>
