@@ -1,13 +1,81 @@
 <script type="text/javascript" >
     $(document).ready(function() {
-        $('#ajax_loading').load('<?=$this->popUrl("example/ajax")?>');
+        $('#del_project').click(function() {
+
+            var baseUrl = "<?= $this->popUrl('query_builder/removeProfile') ?>";
+            window.location = baseUrl + "?del=" + encodeURIComponent($('#project_select').val());
+            return false;
+        });
+        $('#load_project').click(function() {
+
+            var baseUrl = "<?= $this->popUrl('query_builder/index') ?>";
+            window.location = baseUrl + "?load=" + encodeURIComponent($('#project_select').val());
+            return false;
+        });
     });
 </script>
 
-<?= $this->exa1 ?>
 
-<p/>
 
-<? foreach ($this->exa2 as $one): ?>
-    <h3><?= $one ?></h3>
-<? endforeach; ?>
+<? if (!empty($this->projects)): ?>
+    <select id='project_select'>
+        <? foreach ($this->projects as $key => $name): ?>
+            <option value='<?= $key ?>' ><?= $key ?></option>
+        <? endforeach; ?>
+    </select>
+
+    <button id='load_project'>load</button>
+    <button id='del_project'>delete</button>
+<? else: ?>
+
+    <span>No saved project</span>
+
+
+<? endif ?>
+
+<hr/>
+
+
+<form action="<?= $this->popUrl('query_builder/save_project') ?>" method="POST">
+    <table>
+        <tbody>
+
+            <tr>
+                <td>Engine</td>
+                <td>MYSQL</td>
+            </tr>
+            <tr>
+                <td>Host</td>
+                <td><input name='host' id='host'  value='<?= $this->project->host ?>'></td>
+            </tr>
+            <tr>
+                <td>Port</td>
+                <td><input name='port' id='port' value='3306'></td>
+            </tr>
+            <tr>
+                <td>User</td>
+                <td><input name='user' id='user'   value='<?= $this->project->user ?>'></td>
+            </tr>
+            <tr>
+                <td>Password</td>
+                <td><input name='password' id='password'   value='<?= $this->project->password ?>'></td>
+            </tr>
+            <tr>
+                <td>Save to Project</td>
+                <td><input name='project' id='project'  value='<?= $this->project_name ?>'></td>
+            </tr>
+
+
+            <tr>
+                <td><input type="submit"></td>
+                <td></td>
+            </tr>
+
+
+
+
+
+        </tbody>
+    </table>
+
+</form>

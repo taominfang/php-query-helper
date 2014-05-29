@@ -1,0 +1,148 @@
+<script type="text/javascript" >
+
+    var databases =<?= $this->databases ?>;
+
+    var uid_dbs_map =<?= $this->uidDbsMap ?>;
+    var dbs_uid_map =<?= $this->DbsUidMap ?>;
+
+    var dbs_table_loaded = {};
+
+    function showDatabaseList() {
+        //checkbox example
+        $('#database_list').init_item_table_pickup(
+                {
+                    input_type: 'checkbox', //required
+                    column_size: 6, //optional
+                    line_size: 2, //optional, if column_size is gaven, this will be ignor.
+                    odd_column_class: 'odd_column', //optional
+                    even_column_class: 'even_column', //optional
+                    odd_line_class: 'odd_line', //optional
+                    even_line_class: 'even_line', //optional
+                    table_id: 'table_id',
+                    table_class: 'table_class',
+                    caption: 'Select Database',
+                    item_name: 'radio_name',
+                    data: databases, //requried
+                    selected_values: ['vvv', 'asdf']
+                }
+        );
+
+
+    }
+
+
+    function showTableList(divId, databaseName, tables) {
+        //checkbox example
+        $('#' + divId).init_item_table_pickup(
+                {
+                    input_type: 'checkbox', //required
+                    column_size: 6, //optional
+                    line_size: 2, //optional, if column_size is gaven, this will be ignor.
+                    odd_column_class: 'odd_column', //optional
+                    even_column_class: 'even_column', //optional
+                    odd_line_class: 'odd_line', //optional
+                    even_line_class: 'even_line', //optional
+                    table_id: 'table_id',
+                    table_class: 'table_class',
+                    caption: 'Select Tables for ' + databaseName,
+                    item_name: 'radio_name',
+                    data: tables, //requried
+                    selected_values: ['vvv', 'asdf']
+                }
+        );
+
+
+    }
+
+    $(document).ready(function() {
+        showDatabaseList();
+
+        $('#database_list input').click(function() {
+
+
+            var db = $(this).val();
+
+            var uid = dbs_uid_map[db];
+
+            var div_id = uid + '_db_tables_div';
+
+            if (typeof dbs_table_loaded[div_id] === 'undefined') {
+                $('#database_tables').append("<div id='" + div_id + "'>Loading.....</div>");
+                dbs_table_loaded[div_id] = 1;
+
+
+                $.ajax("<?= $this->popUrl('query_builder/list_tables?db=') ?>" + encodeURIComponent(db)).done(function(data) {
+                    var tdata = JSON.parse(data);
+
+                    console.log(tdata);
+                    showTableList(div_id, db, tdata);
+                });
+
+            }
+            else {
+                if ($(this).prop("checked")) {
+                    $('#' + div_id).show();
+                }
+                else {
+                    $('#' + div_id).hide();
+                }
+            }
+
+
+            console.log($(this).val());
+        });
+
+
+        $('#select_tables').click(function() {
+
+            var selected = {};
+            var c = 0;
+            $('#table_id input').each(function() {
+                if ($(this).prop("checked")) {
+                    var db = $(this).val();
+
+                    var uid = dbs_uid_map[db];
+
+                    var div_id = uid + '_db_tables_div';
+
+                    $('#' + div_id + " input").each(function() {
+                        if ($(this).prop("checked")) {
+                            if (typeof selected[db] === 'undefined') {
+
+
+                                selected[db] = [];
+                            }
+
+                            selected[db].push($(this).val());
+                            c++;
+                        }
+                    });
+                }
+            });
+
+            if (c > 0) {
+
+
+                var url = "<?= $this->popUrl('query_builder/prepare?') ?>";
+                url += "tablesInfo=" + encodeURIComponent(JSON.stringify(selected));
+
+                window.location=url;
+            }
+            return false;
+        });
+    });
+</script>
+
+
+
+<p/>
+
+<div id='database_list'>
+
+</div>
+
+
+
+<div id='database_tables'></div>
+
+<button id='select_tables'>Select</button>

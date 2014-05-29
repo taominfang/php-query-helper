@@ -1,13 +1,45 @@
 <script type="text/javascript" >
     $(document).ready(function() {
-        $('#ajax_loading').load('<?=$this->popUrl("example/ajax")?>');
+        var options = [];
+        options.push({
+            uuid: 'adsadfasdf1',
+            show_text: 'option1'
+        });
+        options.push({
+            uuid: 'adsadfasdf2',
+            show_text: 'option2'
+        });
+        options.push({
+            uuid: 'adsadfasdf3',
+            show_text: 'option3'
+        });
+        var cc = new QueryLogic("logics", null, options);
+
+        cc.logic_view_rendering();
+
+        $('#try_me').click(function(){
+            $('#result').val(cc.toConditionStr());
+        });
     });
 </script>
 
-<?= $this->exa1 ?>
+<style>
 
-<p/>
+</style>
 
-<? foreach ($this->exa2 as $one): ?>
-    <h3><?= $one ?></h3>
-<? endforeach; ?>
+
+<div id="logics">
+
+
+
+</div>
+
+
+<? include dirname(__FILE__) . '/../share/logic_edit.phtml'; ?>
+
+
+<hr/>
+
+<button id='try_me'>Try me</button>
+<textarea id='result'></textarea>
+

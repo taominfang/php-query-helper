@@ -1,0 +1,247 @@
+<style>
+    #query_tables_area{
+        background-color: #d8eaed;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+</style>
+
+<script type="text/javascript" >
+
+    var db_table_info =<?= $this->db_table_json_info ?>
+
+    $(document).ready(function() {
+
+        showAction();
+
+        $('#action_select').change(function() {
+            showAction();
+        });
+
+        $('#create_class_bt').click(function() {
+            create_class();
+            return false;
+        });
+
+        loadSetting();
+
+        prepareTablesInfo();
+    });
+
+    var table_info = {};
+    var tab_select_options = "";
+
+    function prepareTablesInfo() {
+
+
+
+        for (var db in db_table_info) {
+            var tt = db_table_info[db];
+            for (var tn in tt) {
+
+                var tabFullName = db + "." + tn;
+                table_info[tabFullName] = tt[tn];
+
+                tab_select_options += "<option value='" + tabFullName + "'>" + tabFullName + "</option>";
+            }
+
+        }
+
+        $('#first_table_select').html(tab_select_options);
+
+    }
+
+    function loadSetting() {
+        var sn = $('#setting_name').val();
+
+        var baseUrl = "<?= $this->popUrl('query_builder/load_setting') ?>";
+        $.ajax(baseUrl + "?name=global_setting&sub_name=" + encodeURIComponent(sn)).done(function(rev) {
+
+            var setting = JSON.parse(rev);
+
+
+
+            if (typeof setting['data'] !== 'undefined') {
+                var ss = setting['data'];
+                for (var ind in ss) {
+                    var vid = ss[ind]['tvm_id'];
+                    var vn = ss[ind]['varialbe'];
+                    $('#' + vid + " .varialbe_name").val(vn);
+                }
+            }
+
+        });
+    }
+
+    function showAction() {
+        $('.action_div').hide();
+        $('#result').hide();
+        $('#' + $('#action_select').val()).show();
+    }
+
+    function create_post(method, data) {
+
+        console.log(data);
+        $.post("<?= $this->popUrl('query_builder/') ?>" + method, data).done(function(reVal) {
+            $('#result').val(reVal);
+            $('#result').show();
+        });
+    }
+
+    function create_class() {
+
+
+        populateTableVariableMap();
+        $('#create_class_form .tab_var_map').val(JSON.stringify(table_name_variale_map));
+        $('#create_class_form .setting_name').val($('#setting_name').val());
+
+        var postVal = $('#create_class_form').serialize();
+
+        create_post('create_class', postVal);
+
+    }
+
+
+    var table_name_variale_map = [];
+    function populateTableVariableMap() {
+        table_name_variale_map = [];
+        $('#table_name_variables tr').each(function() {
+            var tn = $(this).find('.table_name').val();
+            var vn = $(this).find('.varialbe_name').val();
+            var dn = $(this).find('.db_name').val();
+
+            var tvm_id = $(this).find('.tvm_id').val();
+            table_name_variale_map.push({
+                db: dn,
+                table: tn,
+                varialbe: vn,
+                tvm_id: tvm_id
+            });
+
+        });
+
+
+    }
+</script>
+
+Action:
+<select id="action_select">
+    <option value="create_class">Create Class</option>
+    <option value="create_query">Create Query</option>
+    <option value="create_update">Create Update</option>
+    <option value="create_delete">Create Delete</option>
+</select>
+
+<hr/>
+
+<div id="global_setting">
+    <h3>Global Setting</h3>
+
+    <table>
+        <caption>General</caption>
+        <tbody>
+
+            <tr>
+                <td>
+                    Setting Name
+                </td>
+                <td>
+                    <input value="default" id="setting_name" size="10">
+                </td>
+            </tr>
+
+
+        </tbody>
+    </table>
+
+
+    <table>
+        <caption>Table name variables</caption>
+        <tbody id="table_name_variables">
+            <? foreach ($this->db_table_info as $db => $tables): ?>
+                <? foreach ($tables as $tableName => $tmp1): ?>
+                    <tr id="tvm_<?= $db ?>_<?= $tableName ?>">
+                        <td >
+                            <?= $db ?>.<?= $tableName ?>
+                            <input type="hidden" value="<?= $db ?>" class="db_name">
+                            <input type="hidden" value="<?= $tableName ?>" class="table_name">
+                            <input type="hidden" value="tvm_<?= $db ?>_<?= $tableName ?>" class="tvm_id">
+                        </td>
+                        <td>
+                            <input value="$<?= strtoupper($db) ?>_<?= strtoupper($tableName) ?>" size="100" class="varialbe_name">
+                        </td>
+                    </tr>
+
+                <? endforeach; ?>
+            <? endforeach; ?>
+        </tbody>
+    </table>
+
+</div>
+<hr/>
+<div id='create_class' class="action_div">
+
+    <form id="create_class_form">
+        <input class="tab_var_map" name="tab_var_map" value="" type="hidden">
+        <input class="setting_name" name="setting_name" value="" type="hidden">
+        <table>
+            <tbody>
+                <tr>
+                    <td>Class Name</td>
+                    <td><input id="class_name"  name="class_name" class="not_null"></td>
+                </tr>
+            </tbody>
+        </table>
+    </form>
+    <button id="create_class_bt">Create</button>
+
+
+</div>
+
+
+
+<div id='create_query' class="action_div">
+
+    <span>SELECT </span>
+
+    <div id="query_column_area" style="float: none"> click to setup column list  </div>
+
+    <span> From </span>
+
+
+    <div id="query_tables_area" style="float: none"> click to setup tables  </div>
+
+    <span> WHERE </span>
+
+
+    <div id="query_where_area" style="float: none"> click to setup where cluster  </div>
+</div>
+
+<div id='create_update' class="action_div">
+
+
+</div>
+
+<div id='create_delete' class="action_div">
+
+
+</div>
+
+
+<hr/>
+<textarea id="result" cols="120" rows="50" ></textarea>
+
+
+
+<div id="table_pickup" style="display: block">
+
+    <select id="first_table_select">
+
+    </select>
+
+</div>
+

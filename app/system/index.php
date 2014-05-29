@@ -5,6 +5,7 @@ include_once $currentDir . '/function.php';
 include_once $currentDir . '/log.php';
 include_once $currentDir . '/view.php';
 include_once realpath($currentDir . '/../config') . '/system.php';
+include_once realpath($currentDir . '/../config') . '/data_source.php';
 
 date_default_timezone_set('America/Los_Angeles');
 
@@ -22,6 +23,8 @@ if (isset($t1[0])) {
 
 
 $uris = explode('/', $uri);
+
+
 
 
 if (!empty($uris[1])) {
@@ -103,12 +106,20 @@ try {
         $controller->post_filter($method);
     }
 
+    if($controller->redirect_url===null){
 
-    $view->rendering();
+        $view->rendering();
+    }
+
+    else{
+        header("Location: {$controller->redirect_url}");
+    }
 
 } catch (Exception $e) {
-    Log::eException($e);
-    $view->assign('errorMessage', "Exception:" . $e->getMessage() . ' in file:' . $e->getFile() . ' line [' . $e->getLine() . ']');
+
+    $ee="Exception:" . $e->getMessage() . ' in file:' . $e->getFile() . ' line [' . $e->getLine() . ']';
+    MLog::e($e->getTraceAsString());
+    $view->assign('errorMessage',$ee );
     $view->display('error/general_error.phtml');
     return;
 }

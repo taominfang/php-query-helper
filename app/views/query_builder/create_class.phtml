@@ -1,0 +1,8 @@
+class <?= $this->class_name ?>{
+
+<? foreach ($this->table_varialbe_map as $dbv ): ?>
+    protected <?= $dbv['varialbe'] ?>="`<?= $dbv['db'] ?>`.`<?= $dbv['table'] ?>`";
+<? endforeach; ?>
+
+
+}

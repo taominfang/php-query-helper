@@ -7,6 +7,13 @@ class BasicController {
     protected $view;
     protected $required_in_session = array();
 
+    public $redirect_url=null;
+
+
+    public function redirect($url){
+        $this->redirect_url=$url;
+    }
+
     public function setView($v) {
         $this->view=$v;
     }
@@ -43,7 +50,7 @@ class BasicController {
         $this->view->set($pName, $pValue);
     }
 
-    
+
 
 
 
