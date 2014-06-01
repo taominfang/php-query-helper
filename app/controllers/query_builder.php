@@ -272,6 +272,7 @@ class Query_builderController extends BasicController {
 
         if ($this->project_db !== null) {
             $this->project_db->close();
+            MLog::dExport($this->project_db);
             $this->set('engine', $this->project_db->engine);
             $this->set('host', $this->project_db->host);
             $this->set('port', $this->project_db->port);

@@ -1,10 +1,10 @@
 
-$engine='<? $this->engine ?>';
-$host='<? $this->host ?>';
-$port='<? $this->port ?>';
-$user='<? $this->user ?>';
-$password='<? $this->password ?>';
+$engine='<?= $this->engine ?>';
+$host='<?= $this->host ?>';
+$port='<?= $this->port ?>';
+$user='<?= $this->user ?>';
+$password='<?= $this->password ?>';
 
 $dsn = "{$engine}:host={$host};port={$port}";
 
-$pdh= new PDO($dsn, $user, $password);
+$dbh= new PDO($dsn, $user, $password);
