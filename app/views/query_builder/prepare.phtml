@@ -8,6 +8,19 @@
         padding-left: 10px;
         padding-right: 10px;
     }
+
+    .query_on_clause_text_span{
+        color: #c77405;
+        font-size: medium;
+        margin-left: 20px;
+    }
+    .query_column_area_one_column{
+        float: none;
+    }
+    .create_button{
+        background-color: #E5E5E5;
+    }
+
 </style>
 
 <script type="text/javascript" >
@@ -27,31 +40,473 @@
             return false;
         });
 
+        $('#create_query_bt').click(function() {
+            create_query();
+            return false;
+        });
+
         loadSetting();
 
         prepareTablesInfo();
+
+        initQuerySelectTableFirstLine();
+        initSelectTableEvent();
+
+        prepareSelectColumnDialog();
+        prepareConditionEditDilog();
     });
 
+
+    var uid_column_map = {};
+
+    function prepareSelectColumnDialog() {
+        //select_columns_dialog
+
+        $('#select_columns_dialog').dialog({
+            autoOpen: false,
+            modal: true,
+            buttons: [
+                {
+                    text: "Save",
+                    click: function() {
+                        $(this).dialog("close");
+
+                        selectColumnDialogSave();
+
+                    }
+                },
+                {
+                    text: "Close",
+                    click: function() {
+                        $(this).dialog("close");
+                    }
+                }
+            ],
+            width: 800,
+            height: 600,
+            title: 'Condition Edit'
+        });
+
+        $('#query_column_area_bt').click(function() {
+
+
+            var uuid = "query_column_area_bt";
+
+
+            var columns = getUidColumnsList(uuid, null);
+
+            if (columns === null) {
+                return false;
+            }
+
+            var showColumn = [];
+            query_cache_data.columns = {};
+            for (var ind in columns) {
+                var one = columns[ind];
+                var obj = {
+                    display: (one.column.talias !== '' ? one.column.talias + "." : "") + one.column.cname,
+                    id: one.uuid
+
+                };
+                showColumn.push(obj);
+
+                query_cache_data.columns[one.uuid] = obj;
+            }
+
+            $('#select_columns_holder').init_item_table_pickup(
+                    {
+                        input_type: 'checkbox', //required
+                        column_size: 2, //optional
+                        line_size: 2, //optional, if column_size is gaven, this will be ignor.
+                        odd_column_class: 'odd_column', //optional
+                        even_column_class: 'even_column', //optional
+                        odd_line_class: 'odd_line', //optional
+                        even_line_class: 'even_line', //optional
+                        table_id: 'table_id',
+                        table_class: 'table_class',
+                        caption: 'my caption',
+                        item_name: 'radio_name',
+                        data: showColumn, //requried
+                        selected_values: ['vvv', 'asdf']
+                    }
+            );
+            $('#select_columns_dialog').dialog('open');
+        });
+    }
+
+    function selectColumnDialogSave() {
+        var selectColumnUid = [];
+
+        $('#select_columns_holder input[type="checkbox"]').each(function() {
+
+            if ($(this).prop('checked')) {
+                selectColumnUid.push($(this).attr('id'));
+            }
+        });
+
+        var html = "";
+
+        var uidMap = query_cache_data.columns;
+
+        for (var ind in selectColumnUid) {
+            var one = selectColumnUid[ind];
+            var info = uidMap[one];
+            html += "<div class='query_column_area_one_column'>";
+            var text = info.display;
+            html += "<span>" + text + "</span>";
+
+            var aliasVa = text.replace(/\./g, "_");
+
+            var input = "<input type='text' id='column_alias_" + one + "' value='" + aliasVa + "'>";
+
+            html += input;
+            html += "<span>,</span>";
+
+            html += "</div>";
+        }
+
+        $('#query_column_area_column_list').html(html);
+
+    }
+
+    function prepareConditionEditDilog() {
+        $('#condition_edit_dialog').dialog({
+            autoOpen: false,
+            modal: true,
+            buttons: [
+                {
+                    text: "Save",
+                    click: function() {
+                        $(this).dialog("close");
+
+                        onConditionDialogSave();
+
+                    }
+                },
+                {
+                    text: "Close",
+                    click: function() {
+                        $(this).dialog("close");
+                    }
+                }
+            ],
+            width: 800,
+            height: 600,
+            title: 'Condition Edit'
+        });
+
+        $('#query_where_claus_edit_bt').click(function() {
+            var uuid = "query_where_claus_id";
+
+
+            var columns = getUidColumnsList(uuid, null);
+            if (columns === null) {
+                return;
+            }
+            initConditionEditDialog(uuid, columns);
+            return false;
+        });
+
+
+    }
+
+
+
+    var current_editing_line_id = null;
+
+    function initConditionEditDialog(lineId, columns) {
+
+        var data = null;
+        if (typeof query_cache_data.line_id_logic_map[lineId] !== 'undefined' &&
+                typeof query_cache_data.line_id_logic_map[lineId]['logic_data'] !== 'undefined') {
+            data = query_cache_data.line_id_logic_map[lineId]['logic_data'];
+        }
+
+        current_editing_line_id = lineId;
+        current_editing_logic = new QueryLogic("condtion_edit_holder", data, columns);
+        current_editing_logic.setResultTextId('condtion_review_text');
+        current_editing_logic.logic_view_rendering();
+        $('#condition_edit_dialog').dialog("open");
+
+    }
+
+    function onConditionDialogSave() {
+        if (current_editing_logic === null || current_editing_line_id === null) {
+            return;
+        }
+
+        query_cache_data.line_id_logic_map[current_editing_line_id] = {logic_data: current_editing_logic.data, logic_string: current_editing_logic.toConditionStr()};
+
+
+        $('#query_on_clause_text_' + current_editing_line_id).text(current_editing_logic.toConditionStr());
+
+    }
+
     var table_info = {};
-    var tab_select_options = "";
+
+
+    var used_alias = {};
+
+    var alias_counter = 100;
 
     function prepareTablesInfo() {
 
-
+        var tab_select_options = "<option value='NONE'>Please Select a Table</option>";
 
         for (var db in db_table_info) {
             var tt = db_table_info[db];
             for (var tn in tt) {
 
                 var tabFullName = db + "." + tn;
-                table_info[tabFullName] = tt[tn];
+                var alias = db + "_" + tn;
+                table_info[tabFullName] = {
+                    detail: tt[tn],
+                    alias: alias,
+                    db: db,
+                    name: tn
+                };
+
 
                 tab_select_options += "<option value='" + tabFullName + "'>" + tabFullName + "</option>";
             }
 
         }
 
-        $('#first_table_select').html(tab_select_options);
+        $('#query_select_table_id_replace_123').html(tab_select_options);
+
+
+
+    }
+
+    function initQuerySelectTableFirstLine() {
+        var html = $('#query_select_talbe_template_tr').html();
+
+        var uid = getUUID();
+
+        html = html.replace(/replace_123/g, uid);
+
+        $('#query_select_tables').html(html);
+
+
+
+
+        $('#query_select_join_method_id_' + uid).remove();
+        $('#query_on_clause_div_id_' + uid).remove();
+
+
+    }
+
+    var used_alias_table_map = {};
+
+
+    var query_cache_data;
+
+    function resetQueryCache() {
+        query_cache_data = {
+            line_id_above_tables_map: {},
+            line_id_table_column_map: {},
+            line_id_table_name_array: [],
+            global_uid_column_map: {},
+            line_id_logic_map: {},
+            columns: {}
+        };
+    }
+
+    function initSelectTableEvent() {
+
+        resetQueryCache();
+        $('.query_select_table').live('change', function() {
+
+
+            resetQueryCache();
+            var tn = $(this).val();
+
+            if (tn === 'NONE') {
+                return;
+            }
+
+            var alias;
+            if (typeof used_alias_table_map[tn] !== 'undefined') {
+                // if user used this alias, let them use the same again
+
+                alias = used_alias_table_map[tn];
+            }
+            else {
+                alias = table_info[tn].alias;
+
+                if (typeof used_alias[alias] !== 'undefined') {
+                    alias += alias + alias_counter;
+                    alias_counter++;
+                }
+                used_alias[alias] = 1;
+            }
+
+            var uid = $(this).attr('id').replace(/query_select_table_id_/g, '');
+
+            $('#query_table_alias_id_' + uid).val(alias);
+
+
+
+        });
+
+        $('.query_select_table_add_bt').live('click', function() {
+
+            resetQueryCache();
+            var html = $('#query_select_talbe_template_tr').html();
+
+            var uid = getUUID();
+
+            html = html.replace(/replace_123/g, uid);
+
+            var myid = $(this).attr('id').replace(/query_select_table_add_bt_/g, '');
+
+
+            $('#query_select_table_tr_' + myid).after(html);
+            return false;
+
+        });
+        $('.query_select_table_delete_bt').live('click', function() {
+
+
+            resetQueryCache();
+
+            var myid = $(this).attr('id').replace(/query_select_table_delete_bt_/g, '');
+
+
+            $('#query_select_table_tr_' + myid).remove();
+
+            return false;
+
+
+        });
+
+        $('.query_on_clause').live('click', function() {
+
+
+
+
+            //get this line's uuid from button's id
+
+            var uuid = $(this).attr('id').replace(/query_on_clause_id_/g, '');
+
+
+
+            var columns = getUidColumnsList(uuid, uuid);
+
+            if (columns === null) {
+                return;
+            }
+            initConditionEditDialog(uuid, columns);
+        });
+    }
+
+    function getUidColumnsList(uuid, stopId) {
+
+
+        var lineIdList;
+        if (typeof query_cache_data.line_id_above_tables_map[uuid] === 'undefined') {
+
+            //find above line id
+            lineIdList = [];
+
+
+            var stop = false;
+
+            query_cache_data.line_id_table_name_array = [];
+            $('#query_select_tables .query_select_table').each(function() {
+                var suid = $(this).attr('id').replace(/query_select_table_id_/g, '');
+
+                if (!stop) {
+                    lineIdList.push(suid);
+                }
+                if (suid === stopId) {
+                    stop = true;
+                }
+                query_cache_data.line_id_table_name_array.push({line_id: suid, table_full_name: $(this).val()});
+            });
+
+            query_cache_data.line_id_above_tables_map[uuid] = lineIdList;
+        }
+        else {
+            lineIdList = query_cache_data.line_id_above_tables_map[uuid];
+        }
+
+
+        var columns = [];
+
+        var ts = 0;
+        for (var ind in lineIdList) {
+            ts++;
+        }
+
+        for (var ind in lineIdList) {
+
+            //check the alias is not empty
+
+            var lineId = lineIdList[ind];
+            var aid = "query_table_alias_id_" + lineId;
+
+
+            var aliasName = $('#' + aid).val();
+
+
+            if (aliasName === '' && ts > 1) {
+                alert("alias is required");
+                return null;
+            }
+
+            var uidColumnMap;
+
+            if (typeof query_cache_data.line_id_table_column_map[lineId] !== 'undefined') {
+                uidColumnMap = query_cache_data.line_id_table_column_map[lineId];
+            }
+            else {//create the cache
+
+                var sid = "query_select_table_id_" + lineIdList[ind];
+                var selectedTable = $('#' + sid).val();
+                if (selectedTable === 'NONE') {
+                    alert("you need select table before set on cluase");
+                    return null;
+                }
+                uidColumnMap = {};
+
+                var tableInfo = table_info[selectedTable];
+                var tableInfoDetail = tableInfo.detail;
+
+                for (var i3 in tableInfoDetail) {
+
+                    var uuuid = getUUID();
+                    var info = {
+                        name: tableInfoDetail[i3].name,
+                        table: tableInfo.name,
+                        db: tableInfo.db,
+                        uuid: uuuid,
+                        line_uid: lineId
+                    };
+                    uidColumnMap[uuuid] = info;
+
+                    query_cache_data.global_uid_column_map[uuuid] = info;
+                }
+
+                query_cache_data.line_id_table_column_map[lineId] = uidColumnMap;
+            }
+            for (var columnUid in uidColumnMap) {
+
+                columns.push({
+                    uuid: columnUid,
+                    column: {
+                        cname: uidColumnMap[columnUid].name,
+                        talias: aliasName
+                    }
+
+                });
+
+
+            }
+
+
+        }
+        return columns;
 
     }
 
@@ -105,6 +560,51 @@
 
     }
 
+    function create_query() {
+
+
+        populateTableVariableMap();
+        $('#create_query_form .tab_var_map').val(JSON.stringify(table_name_variale_map));
+        $('#create_query_form .setting_name').val($('#setting_name').val());
+        $('#create_query_form .uid_column_map').val(JSON.stringify(query_cache_data.global_uid_column_map));
+        $('#create_query_form .line_id_table_array').val(JSON.stringify(query_cache_data.line_id_table_name_array));
+        $('#create_query_form .table_info').val(JSON.stringify(table_info));
+
+
+
+        var columns = [];
+        $('#query_column_area_column_list input[type="text"]').each(function() {
+            columns.push({
+                id: $(this).attr('id').replace(/column_alias_/g, ''),
+                alias: $(this).val()
+            });
+        });
+        $('#create_query_form .column_data').val(JSON.stringify(columns));
+
+        var tableAlias = {};
+
+        $('#query_select_tables input[class="query_table_alias"]').each(function() {
+            tableAlias[$(this).attr('id').replace(/query_table_alias_id_/g, '')] = $(this).val();
+        });
+
+        $('#create_query_form .line_id_alias_map').val(JSON.stringify(tableAlias));
+
+        $('#query_select_tables select[class="query_select_join_method"]').each(function() {
+            query_cache_data.line_id_logic_map[$(this).attr('id').replace(/query_select_join_method_id_/g, '')].join_type = $(this).val();
+        });
+        $('#create_query_form .line_id_logic_map').val(JSON.stringify(query_cache_data.line_id_logic_map));
+
+
+
+
+
+
+        var postVal = $('#create_query_form').serialize();
+
+        create_post('create_query', postVal);
+
+    }
+
 
     var table_name_variale_map = [];
     function populateTableVariableMap() {
@@ -113,13 +613,14 @@
             var tn = $(this).find('.table_name').val();
             var vn = $(this).find('.varialbe_name').val();
             var dn = $(this).find('.db_name').val();
-
+            var dr = $(this).find('.db_name_required').prop('checked');
             var tvm_id = $(this).find('.tvm_id').val();
             table_name_variale_map.push({
                 db: dn,
                 table: tn,
                 varialbe: vn,
-                tvm_id: tvm_id
+                tvm_id: tvm_id,
+                db_name_required: dr
             });
 
         });
@@ -174,6 +675,10 @@ Action:
                         <td>
                             <input value="$<?= strtoupper($db) ?>_<?= strtoupper($tableName) ?>" size="100" class="varialbe_name">
                         </td>
+
+                        <td>
+                            <input value="1" type="checkbox" class="db_name_required" checked="checked"> required DB name
+                        </td>
                     </tr>
 
                 <? endforeach; ?>
@@ -197,7 +702,11 @@ Action:
             </tbody>
         </table>
     </form>
-    <button id="create_class_bt">Create</button>
+
+    <div class="create_button" style="margin-top: 30px">
+        <button id="create_class_bt">Create</button>
+    </div>
+
 
 
 </div>
@@ -208,17 +717,52 @@ Action:
 
     <span>SELECT </span>
 
-    <div id="query_column_area" style="float: none"> click to setup column list  </div>
+    <div id="query_column_area" style="float: none">
+        <div id="query_column_area_column_list">
+
+        </div>
+        <button id="query_column_area_bt">edit</button>
+    </div>
 
     <span> From </span>
 
 
-    <div id="query_tables_area" style="float: none"> click to setup tables  </div>
+    <div id="query_tables_area" style="float: none">
+
+        <table>
+            <tbody id="query_select_tables">
+
+            </tbody>
+
+        </table>
+
+
+    </div>
+
 
     <span> WHERE </span>
 
 
-    <div id="query_where_area" style="float: none"> click to setup where cluster  </div>
+    <div id="query_where_area" style="float: none">
+        <span id="query_on_clause_text_query_where_claus_id"></span>
+        <button class="query_where_clause" id="query_where_claus_edit_bt">Edit</button>
+    </div>
+
+    <div class="create_button" style="margin-top: 30px">
+        <form id="create_query_form">
+            <input class="tab_var_map" name="tab_var_map" value="" type="hidden">
+            <input class="setting_name" name="setting_name" value="" type="hidden">
+            <input class="uid_column_map" name="uid_column_map" value="" type="hidden">
+            <input class="column_data" name="column_data" value="" type="hidden">
+            <input class="line_id_logic_map" name="line_id_logic_map" value="" type="hidden">
+            <input class="line_id_table_array" name="line_id_table_array" value="" type="hidden">
+            <input class="line_id_alias_map" name="line_id_alias_map" value="" type="hidden">
+            <input class="table_info" name="table_info" value="" type="hidden">
+
+            Query Name:<input class="query_name" name="query_name" value="" type="text">
+        </form>
+        <button id="create_query_bt">Create Query</button>
+    </div>
 </div>
 
 <div id='create_update' class="action_div">
@@ -235,13 +779,67 @@ Action:
 <hr/>
 <textarea id="result" cols="120" rows="50" ></textarea>
 
+<table style="display: none">
+    <tbody id="query_select_talbe_template_tr" >
+        <tr id="query_select_table_tr_replace_123">
+            <td>
+                <select  class="query_select_join_method" id="query_select_join_method_id_replace_123">
+                    <option>INNER JOIN</option>
+                    <option>LEFT JOIN</option>
+                    <option>RIGHT JOIN</option>
+                    <option>OUTER JOIN</option>
 
+                </select>
+            </td>
+            <td>
+                <select  class="query_select_table" id="query_select_table_id_replace_123">
 
-<div id="table_pickup" style="display: block">
+                </select>
+            </td>
 
-    <select id="first_table_select">
+            <td>
+                Alias:<input type="text" class="query_table_alias" id="query_table_alias_id_replace_123">
+            </td>
 
-    </select>
+            <td style="width: 200px">
+                <div id="query_on_clause_div_id_replace_123"><span>On: </span>
+                    <span id="query_on_clause_text_replace_123" class="query_on_clause_text_span"></span>
+                    <button class="query_on_clause" id="query_on_clause_id_replace_123">Edit</button>
+                </div>
+
+            </td>
+
+            <td>
+                <button id="query_select_table_add_bt_replace_123" class="query_select_table_add_bt">Add one table</button>
+            </td>
+
+            <td>
+                <button id="query_select_table_delete_bt_replace_123" class="query_select_table_delete_bt">Delete</button>
+            </td>
+
+        </tr>
+    </tbody>
+</table>
+
+<div id="condition_edit_dialog" style="display: none;">
+    <div id="condtion_edit_holder">
+
+    </div>
+
+    <hr/>
+
+    <div id="condition_review">
+        <textarea id="condtion_review_text" readonly="readonly" cols="80"></textarea>
+    </div>
 
 </div>
+
+<div id="select_columns_dialog" style="display: none;">
+    <div id="select_columns_holder"></div>
+
+
+</div>
+<? include dirname(__FILE__) . '/../share/logic_edit.phtml'; ?>
+
+
 

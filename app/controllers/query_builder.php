@@ -9,6 +9,9 @@ class Query_builderController extends BasicController {
 
         $this->view->addInternalJs("jquery-1.7.1.min.js");
         $this->view->addInternalJs("jquery-ui-1.8.17.custom.min.js");
+        $this->view->addInternalJs("utility.js");
+
+
         $this->view->addInternalCss("ui-lightness/jquery-ui-1.8.17.custom.css");
     }
 
@@ -218,6 +221,12 @@ class Query_builderController extends BasicController {
             throw new Exception("tablesInfo is required");
         }
 
+        $this->view->addInternalJs("logic_edit.js");
+        $this->view->addInternalJs("items_table_pickup.js");
+
+
+        $this->view->addInternalCss("logic_edit.css");
+
         $tableInfo = json_decode($_GET['tablesInfo'], true);
 
         $db_tables = array();
@@ -286,6 +295,95 @@ class Query_builderController extends BasicController {
         }
     }
 
+    public function create_query() {
+        $this->setLayout("ajax.phtml");
+
+        $columns = json_decode($_POST['column_data'], true);
+
+        $tableInfo = json_decode($_POST['table_info'], true);
+        $lineIdTableArray = json_decode($_POST['line_id_table_array'], true);
+        $uidColumnMap = json_decode($_POST['uid_column_map'], true);
+        $lineIdAliasMap = json_decode($_POST['line_id_alias_map'], true);
+        $lineIdLogicMap = json_decode($_POST['line_id_logic_map'], true);
+        $table_varialbe_map = json_decode($_POST['tab_var_map'], true);
+
+
+
+
+        $this->set('function_name', $_POST['query_name'], true);
+        $this->set('table_size', count($lineIdAliasMap));
+
+        $tableVariableMap = array();
+        foreach ($table_varialbe_map as $one) {
+            $tableVariableMap["{$one['db']}.{$one['table']}"] = $one['varialbe'];
+        }
+
+        $this->set('tname_veriable_map', $tableVariableMap);
+
+        $lineIdTableFullNameMap = array();
+        $fromTables = array();
+        $variables=array();
+        foreach ($lineIdTableArray as $one) {
+            $lineId = $one['line_id'];
+            $lineIdTableFullNameMap[$lineId] = $one['table_full_name'];
+            $oneFromTable = array();
+            $oneFromTable['line_id'] = $lineId;
+            $oneFromTable['table_full_name'] = $one['table_full_name'];
+            $oneFromTable['table_alias'] = $lineIdAliasMap[$lineId];
+            $oneFromTable['table_variable'] = $tableVariableMap[$oneFromTable['table_full_name']];
+
+            if (!empty($lineIdLogicMap[$lineId])) {
+                $logic = $lineIdLogicMap[$lineId];
+
+                $logicStr = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap,$variables);
+                $oneFromTable['logic_string'] = $logicStr;
+                $oneFromTable['join_type'] = $logic['join_type'];
+            }
+
+            $fromTables[] = $oneFromTable;
+        }
+
+        $this->set('frome_tables', $fromTables);
+
+
+        $cc = array();
+        foreach ($columns as $one) {
+            $id = $one['id'];
+            $column = $uidColumnMap[$id];
+            $tableAlias = $lineIdAliasMap[$column['line_uid']];
+            $tableFullName = $lineIdTableFullNameMap[$column['line_uid']];
+            $tableVariable = $tableVariableMap[$tableFullName];
+            $cc[] = array(
+                'column_name' => $column['name'],
+                'alias_name' => $one['alias'],
+                'table_alias' => $tableAlias,
+                'table_varialbe' => $tableVariable);
+        }
+
+        $this->set('columns', $cc);
+
+
+        $whereCluasStr = "";
+
+        if (!empty($lineIdLogicMap['query_where_claus_id'])) {
+            $whereCluasStr = $this->logic2String($lineIdLogicMap['query_where_claus_id']['logic_data'], $uidColumnMap, $lineIdAliasMap,$variables);
+        }
+
+        $this->set('where_claus', $whereCluasStr);
+
+        $this->set('variables',  array_keys($variables));
+
+        //MLog::dExport($_POST);
+//        MLog::dExport($columns, 'columns');
+//        MLog::dExport($tableInfo, '$tableInfo');
+//        MLog::dExport($lineIdTableArray, '$uidTableMap');
+//        MLog::dExport($lineIdAliasMap, '$lineIdAliasMap');
+//        MLog::dExport($tableVariableMap, '$tableVariableMap');
+        MLog::dExport($lineIdLogicMap, '$lineIdLogicMap');
+//        MLog::dExport($uidColumnMap, '$uidColumnMap');
+        MLog::dExport($variables, '$variables');
+    }
+
     public function load_setting() {
         $this->setLayout("ajax.phtml");
 
@@ -316,8 +414,7 @@ class Query_builderController extends BasicController {
                         if (isset($nv[$sub_name])) {
                             $re['result'] = 'success';
                             $re['data'] = $nv[$sub_name];
-                        }
-                        else{
+                        } else {
                             $re['result'] = 'nosubdata';
                         }
                     }
@@ -326,7 +423,110 @@ class Query_builderController extends BasicController {
         }
 
         MLog::dExport($re);
-        $this->view->jsonStr=  json_encode($re);
+        $this->view->jsonStr = json_encode($re);
+    }
+
+    protected function logic2String($logic, $columnIdInfoMap, $lineIdAliasMap,&$variables) {
+
+        if ($logic === null) {
+            return null;
+        }
+
+        if ($logic['connector'] === null && $logic['condition'] === null) {
+            return ' *** ??? *** ';
+        }
+
+        $re = null;
+        if ($logic ['single']) {
+            if ($logic['condition'] === null) {
+                return " ***???*** ";
+            }
+
+
+            $cond = $logic['condition'];
+
+            $logicV = null;
+
+            $leftV = $this->getShowText($cond['left_select'], $cond['left_value'], $columnIdInfoMap, $lineIdAliasMap,$variables);
+            $rightV = $this->getShowText($cond['right_select'], $cond['right_value'], $columnIdInfoMap, $lineIdAliasMap,$variables);
+            $extraV = $this->getShowText($cond['extra_select'], $cond['extra_value'], $columnIdInfoMap, $lineIdAliasMap,$variables);
+
+
+
+
+            if ($cond ['logic_value'] === '') {
+                $logicV = "???";
+            } else {
+                $logicV = $cond ['logic_value'];
+            }
+
+
+            if ($cond['left_select'] === 'variable_value') {
+                $leftV = ":" . $leftV;
+            }
+            if ($cond['right_select'] === 'variable_value') {
+                $rightV = ":" . $rightV;
+            }
+            if ($cond['extra_select'] === 'variable_value') {
+                $extraV = ":" . $extraV;
+            }
+
+
+
+            if ($logicV === "IS NULL" || $logicV === 'IS NOT NULL') {
+
+                $re = $leftV . " " . $logicV;
+            } else if ($logicV === "BETWEEN") {
+
+                $re = $leftV . " " . $logicV . " " . $rightV . " AND " . $extraV;
+            } else {
+                $re = $leftV . " " . $logicV . " " . $rightV;
+            }
+        } else {
+
+            $re = "";
+            $leftStr = $this->logic2String($logic['left'], $columnIdInfoMap, $lineIdAliasMap,$variables);
+            $rightStr = $this->logic2String($logic['right'], $columnIdInfoMap, $lineIdAliasMap,$variables);
+
+            if ($leftStr === null) {
+                $leftStr = "___ERROR_left_null___";
+            }
+            if ($rightStr === null) {
+                $leftStr = "___ERROR_right_null___";
+            }
+
+            $re .= "( " . $leftStr . ") ";
+            if ($logic['connector'] === null) {
+                $re .= " ?AND/OR? ";
+            } else {
+                $re .= $logic['connector'] . " ";
+            }
+            $re .= "( " . $rightStr . " )";
+        }
+        return $re;
+    }
+
+    protected function getShowText($sel, $v, $columnIdInfoMap, $lineIdAliasMap,&$variables) {
+        if ($v === '') {
+            return "???";
+        }
+        if ($sel === "variable_value" || $sel === 'custom_value') {
+            if($sel === "variable_value"){
+                $variables[$v]=1;
+            }
+            return $v;
+        } else {
+
+            $columnInfo = $columnIdInfoMap[$sel];
+            $lineId = $columnInfo['line_uid'];
+            $tableAlias = $lineIdAliasMap[$lineId];
+
+            if (empty($tableAlias)) {
+                return $columnInfo['name'];
+            } else {
+                return "{$tableAlias}.{$columnInfo['name']}";
+            }
+        }
     }
 
 }

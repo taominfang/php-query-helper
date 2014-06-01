@@ -1,0 +1,74 @@
+
+public function <?= $this->function_name ?>($dbh<?
+foreach ($this->variables as $one) {
+    echo ', $' . $one;
+}
+?>){
+
+try {
+
+$query = <<<EOGAD_REAND_STRING_23K4324K
+    SELECT
+    <?
+    foreach ($this->columns as $ind => $one) {
+        if ($ind !== 0) {
+            echo ", ";
+        }
+
+        if (empty($one['table_alias'])) {
+            $columnName = '{' . $one['table_varialbe'] . '}.' . $one['column_name'];
+        } else {
+            $columnName = "{$one['table_alias']}.{$one['column_name']}";
+        }
+
+        $aliasName = $one['alias_name'];
+        echo "{$columnName} {$aliasName}\n";
+    }
+    ?>
+    FROM
+    <?
+    foreach ($this->frome_tables as $one) {
+        if (!empty($one['join_type'])) {
+            echo $one['join_type'] . " ";
+        }
+        echo '{' . $one['table_variable'] . '}';
+
+        if (!empty($one['table_alias'])) {
+            echo " as {$one['table_alias']}";
+        }
+
+        if (!empty($one['logic_string'])) {
+            echo " on {$one['logic_string']}";
+        }
+
+        echo "\n";
+    }
+
+
+    if (!empty($this->where_claus)) {
+        echo "WHERE {$this->where_claus}\n";
+    }
+    ?>
+
+
+    EOGAD_REAND_STRING_23K4324K
+
+    $bind_arr = array();
+
+    <?
+    foreach ($this->variables as $one) {
+        echo '$bind_arr[\':' . $one . '\']=$' . $one . ";\n";
+    }
+    ?>
+
+    $stmt = $dbh->prepare($query);
+
+    $stmt_rv = $stmt->execute($bind_arr);
+
+    return $stmt_rv;
+    }
+    catch ( PDOException $x ) {
+    //$errorMessage="database error: " . $x->getMessage();
+    throw $x;
+    }
+    }

@@ -41,18 +41,30 @@ function QueryLogic(div_id, initData, conditionOptions) {
         title: 'Logic Edit'
     });
 
+    this.uid_show_text_map = {};
+
+    for (var ind in conditionOptions) {
+        var one = conditionOptions[ind];
+        var showText = (typeof one.column.talias !== 'undefined' && one.column.talias !== '') ?
+                one.column.talias + "." + one.column.cname :
+                one.column.cname;
+        this.uid_show_text_map[one.uuid] = showText;
+    }
+
     var options = "";
 
     options += "<option value='custom_value'>CUSTOM VALUE</option>";
     options += "<option value='variable_value'>VARIABLE</option>";
 
-    for (var ind in conditionOptions) {
-        var one = conditionOptions[ind];
+    for (var ind in this.uid_show_text_map) {
+
+
+
         options += "<option value='";
-        options += one.uuid;
+        options += ind;
         options += "'>";
 
-        options += that.escapeHTML(one.show_text);
+        options += that.escapeHTML(this.uid_show_text_map[ind]);
 
         options += "</option>";
 
@@ -174,15 +186,19 @@ function QueryLogic(div_id, initData, conditionOptions) {
 
 }
 
+QueryLogic.prototype.setResultTextId = function(tid) {
+    this.text_result_id = tid;
+};
 
 QueryLogic.prototype.editDialogSaveValue = function() {
     if (this.current_edit_node !== null) {
+        //get description
         this.current_edit_node.desc = $('#logic_edit_dialog_desc').val();
 
         if (this.current_edit_node.connector === null) {
-
+            // this is simple condition
             var values = {};
-            var vc = 0;
+            var vc = 0; //the total number of unempty input, value coutner
             for (var ind in this.editDialogSelectInputSet) {
                 this.initEditDialogSelectEvent(ind);
                 var v1 = $('#' + this.editDialogSelectInputSet[ind]['input_id']).val();
@@ -201,12 +217,20 @@ QueryLogic.prototype.editDialogSaveValue = function() {
                 for (var ind in this.editDialogSelectInputSet) {
                     var savaValueName = this.editDialogSelectInputSet[ind]['saved_input_name'];
                     var saveSelectName = this.editDialogSelectInputSet[ind]['saved_select_option_name'];
-                    this.current_edit_node.condition[savaValueName] = values[savaValueName];
-                    this.current_edit_node.condition[saveSelectName] = $('#' + ind).val();
+
+                    var sel = $('#' + ind).val();
+                    this.current_edit_node.condition[saveSelectName] = sel;
+                    if (sel === "variable_value" || sel === 'custom_value' || ind === 'logic_edit_dialog_logic_options') {
+                        this.current_edit_node.condition[savaValueName] = values[savaValueName];
+
+                    }
+                    else {
+                        this.current_edit_node.condition[savaValueName] = sel;
+                    }
 
                 }
 
-
+                //decide is it finised, in most situation , the follow code work, in some special , it will give the wrong finished flag.
                 this.current_edit_node.finished = false;
                 if (logicSelect === 'BETWEEN') {
                     if (vc > 3) {
@@ -467,6 +491,10 @@ QueryLogic.prototype.logic_view_rendering = function() {
     $('#' + this.div_id).html(html);
 
     this.initEditButtonClickEvent();
+
+    if (typeof this.text_result_id !== 'undefined') {
+        $('#' + this.text_result_id).val(this.toConditionStr());
+    }
 };
 
 QueryLogic.prototype.logic_view_nest_rendering = function(node, level) {
@@ -482,8 +510,10 @@ QueryLogic.prototype.logic_view_nest_rendering = function(node, level) {
 
 
     if (node.connector !== null) {
-        html += '<span class="logic_div_logic">Logic: ' + node.connector + '</span>';
+        html += '<span class="logic_div_logic">Logic: ' + node.connector + '|:</span>';
     }
+
+    html += '<span class="logic_str">' + this.node2Str(node) + '</span>';
 
     html += '<span class="logic_div_desc">' + node.desc + '</span>';
 
@@ -537,6 +567,18 @@ QueryLogic.prototype.toConditionStr = function() {
     return this.node2Str(this.data);
 };
 
+QueryLogic.prototype.getShowText = function(sel, v) {
+    if (v === '') {
+        return "???";
+    }
+    if (sel === "variable_value" || sel === 'custom_value') {
+        return v;
+    }
+    else {
+        return this.uid_show_text_map[sel];
+    }
+};
+
 QueryLogic.prototype.node2Str = function(node) {
 
     if (node === null) {
@@ -556,41 +598,31 @@ QueryLogic.prototype.node2Str = function(node) {
 
         var cond = node.condition;
 
-        var leftV, rightV, logicV, extraV;
+        var logicV;
 
-        if (cond.left_value === '') {
-            leftV = "???";
-        }
-        else {
-            leftV = cond.left_value;
-        }
+        var leftV = this.getShowText(cond.left_select, cond.left_value);
+        var rightV = this.getShowText(cond.right_select, cond.right_value);
+        var extraV = this.getShowText(cond.extra_select, cond.extra_value);
 
-        if (cond.right_value === '') {
-            rightV = "???";
-        }
-        else {
-            rightV = cond.right_value;
-        }
+
+
+
         if (cond.logic_value === '') {
             logicV = "???";
         }
         else {
             logicV = cond.logic_value;
         }
-        if (cond.extra_value === '') {
-            extraV = "???";
-        }
-        else {
-            extraV = cond.extra_value;
-        }
+
+
         if (cond.left_select === 'variable_value') {
             leftV = ":" + leftV;
         }
         if (cond.right_select === 'variable_value') {
-            rightV = ":" + leftV;
+            rightV = ":" + rightV;
         }
-        if (cond.ex_select === 'variable_value') {
-            extraV = ":" + leftV;
+        if (cond.extra_select === 'variable_value') {
+            extraV = ":" + extraV;
         }
 
 
@@ -651,6 +683,9 @@ QueryLogic.prototype.escapeHTML = (function() {
         '/': '&#47;', '<': '&lt;', '>': '&gt;'
     };
     return function(text) {
+        if (typeof text === 'undefined') {
+            return text;
+        }
         return text.replace(/[\"&'\/<>]/g, function(a) {
             return chr[a];
         });
