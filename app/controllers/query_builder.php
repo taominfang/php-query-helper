@@ -265,6 +265,24 @@ class Query_builderController extends BasicController {
         $_SESSION['db_tables'] = serialize($db_tables);
     }
 
+    public function create_pdo_connect_code() {
+        $this->setLayout("ajax.phtml");
+
+        $this->openProjectDb();
+
+        if ($this->project_db !== null) {
+            $this->project_db->close();
+            $this->set('engine', $this->project_db->engine);
+            $this->set('host', $this->project_db->host);
+            $this->set('port', $this->project_db->port);
+            $this->set('user', $this->project_db->user);
+            $this->set('password', $this->project_db->password);
+        }
+        else{
+            MLog::d("open project db fail!");
+        }
+    }
+
     public function create_class() {
         $this->setLayout("ajax.phtml");
 
@@ -322,7 +340,7 @@ class Query_builderController extends BasicController {
 
         $lineIdTableFullNameMap = array();
         $fromTables = array();
-        $variables=array();
+        $variables = array();
         foreach ($lineIdTableArray as $one) {
             $lineId = $one['line_id'];
             $lineIdTableFullNameMap[$lineId] = $one['table_full_name'];
@@ -330,12 +348,12 @@ class Query_builderController extends BasicController {
             $oneFromTable['line_id'] = $lineId;
             $oneFromTable['table_full_name'] = $one['table_full_name'];
             $oneFromTable['table_alias'] = $lineIdAliasMap[$lineId];
-            $oneFromTable['table_variable'] = $tableVariableMap[$oneFromTable['table_full_name']];
+            $oneFromTable['table_variable'] = '$this->' . $tableVariableMap[$oneFromTable['table_full_name']];
 
             if (!empty($lineIdLogicMap[$lineId])) {
                 $logic = $lineIdLogicMap[$lineId];
 
-                $logicStr = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap,$variables);
+                $logicStr = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
                 $oneFromTable['logic_string'] = $logicStr;
                 $oneFromTable['join_type'] = $logic['join_type'];
             }
@@ -366,12 +384,12 @@ class Query_builderController extends BasicController {
         $whereCluasStr = "";
 
         if (!empty($lineIdLogicMap['query_where_claus_id'])) {
-            $whereCluasStr = $this->logic2String($lineIdLogicMap['query_where_claus_id']['logic_data'], $uidColumnMap, $lineIdAliasMap,$variables);
+            $whereCluasStr = $this->logic2String($lineIdLogicMap['query_where_claus_id']['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
         }
 
         $this->set('where_claus', $whereCluasStr);
 
-        $this->set('variables',  array_keys($variables));
+        $this->set('variables', array_keys($variables));
 
         //MLog::dExport($_POST);
 //        MLog::dExport($columns, 'columns');
@@ -426,7 +444,7 @@ class Query_builderController extends BasicController {
         $this->view->jsonStr = json_encode($re);
     }
 
-    protected function logic2String($logic, $columnIdInfoMap, $lineIdAliasMap,&$variables) {
+    protected function logic2String($logic, $columnIdInfoMap, $lineIdAliasMap, &$variables) {
 
         if ($logic === null) {
             return null;
@@ -447,9 +465,9 @@ class Query_builderController extends BasicController {
 
             $logicV = null;
 
-            $leftV = $this->getShowText($cond['left_select'], $cond['left_value'], $columnIdInfoMap, $lineIdAliasMap,$variables);
-            $rightV = $this->getShowText($cond['right_select'], $cond['right_value'], $columnIdInfoMap, $lineIdAliasMap,$variables);
-            $extraV = $this->getShowText($cond['extra_select'], $cond['extra_value'], $columnIdInfoMap, $lineIdAliasMap,$variables);
+            $leftV = $this->getShowText($cond['left_select'], $cond['left_value'], $columnIdInfoMap, $lineIdAliasMap, $variables);
+            $rightV = $this->getShowText($cond['right_select'], $cond['right_value'], $columnIdInfoMap, $lineIdAliasMap, $variables);
+            $extraV = $this->getShowText($cond['extra_select'], $cond['extra_value'], $columnIdInfoMap, $lineIdAliasMap, $variables);
 
 
 
@@ -485,8 +503,8 @@ class Query_builderController extends BasicController {
         } else {
 
             $re = "";
-            $leftStr = $this->logic2String($logic['left'], $columnIdInfoMap, $lineIdAliasMap,$variables);
-            $rightStr = $this->logic2String($logic['right'], $columnIdInfoMap, $lineIdAliasMap,$variables);
+            $leftStr = $this->logic2String($logic['left'], $columnIdInfoMap, $lineIdAliasMap, $variables);
+            $rightStr = $this->logic2String($logic['right'], $columnIdInfoMap, $lineIdAliasMap, $variables);
 
             if ($leftStr === null) {
                 $leftStr = "___ERROR_left_null___";
@@ -506,13 +524,13 @@ class Query_builderController extends BasicController {
         return $re;
     }
 
-    protected function getShowText($sel, $v, $columnIdInfoMap, $lineIdAliasMap,&$variables) {
+    protected function getShowText($sel, $v, $columnIdInfoMap, $lineIdAliasMap, &$variables) {
         if ($v === '') {
             return "???";
         }
         if ($sel === "variable_value" || $sel === 'custom_value') {
-            if($sel === "variable_value"){
-                $variables[$v]=1;
+            if ($sel === "variable_value") {
+                $variables[$v] = 1;
             }
             return $v;
         } else {

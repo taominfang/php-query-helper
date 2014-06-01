@@ -45,6 +45,11 @@
             return false;
         });
 
+        $('#create_pdo_handle_bt').click(function() {
+            create_pdo();
+            return false;
+        });
+
         loadSetting();
 
         prepareTablesInfo();
@@ -547,6 +552,9 @@
         });
     }
 
+    function create_pdo() {
+        create_post('create_pdo_connect_code', '');
+    }
     function create_class() {
 
 
@@ -673,7 +681,7 @@ Action:
                             <input type="hidden" value="tvm_<?= $db ?>_<?= $tableName ?>" class="tvm_id">
                         </td>
                         <td>
-                            <input value="$<?= strtoupper($db) ?>_<?= strtoupper($tableName) ?>" size="100" class="varialbe_name">
+                            <input value="<?= strtoupper($db) ?>_<?= strtoupper($tableName) ?>" size="100" class="varialbe_name">
                         </td>
 
                         <td>
@@ -706,6 +714,9 @@ Action:
     <div class="create_button" style="margin-top: 30px">
         <button id="create_class_bt">Create</button>
     </div>
+
+    <br/>
+    <button id="create_pdo_handle_bt">Create PDO</button>
 
 
 

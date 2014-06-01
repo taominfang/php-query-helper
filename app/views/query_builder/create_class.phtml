@@ -1,7 +1,7 @@
 class <?= $this->class_name ?>{
 
 <? foreach ($this->table_varialbe_map as $dbv ): ?>
-    protected <?= $dbv['varialbe'] ?>="<?if($dbv['db_name_required']):?>`<?= $dbv['db'] ?>`.<?endif?>`<?= $dbv['table'] ?>`";
+    protected <?= '$'.$dbv['varialbe'] ?>="<?if($dbv['db_name_required']):?>`<?= $dbv['db'] ?>`.<?endif?>`<?= $dbv['table'] ?>`";
 <? endforeach; ?>
 
 
