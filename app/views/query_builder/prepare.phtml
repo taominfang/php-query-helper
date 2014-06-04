@@ -45,6 +45,14 @@
             return false;
         });
 
+        $('#create_update_bt').click(function() {
+            create_update();
+            return false;
+        });
+
+
+
+
         $('#create_pdo_handle_bt').click(function() {
             create_pdo();
             return false;
@@ -135,11 +143,68 @@
                         selected_values: ['vvv', 'asdf']
                     }
             );
+            column_select_target = "query";
+            $('#select_columns_dialog').dialog('open');
+        });
+
+
+        $('#update_column_area_bt').click(function() {
+
+
+            var uuid = "update_column_area_bt";
+
+
+            var columns = getUidColumnsList(uuid, null);
+
+            if (columns === null) {
+                return false;
+            }
+
+            var showColumn = [];
+            query_cache_data.columns = {};
+            for (var ind in columns) {
+                var one = columns[ind];
+                var obj = {
+                    display: (one.column.talias !== '' ? one.column.talias + "." : "") + one.column.cname,
+                    id: one.uuid
+
+                };
+                showColumn.push(obj);
+
+                query_cache_data.columns[one.uuid] = obj;
+            }
+
+            $('#select_columns_holder').init_item_table_pickup(
+                    {
+                        input_type: 'checkbox', //required
+                        column_size: 2, //optional
+                        line_size: 2, //optional, if column_size is gaven, this will be ignor.
+                        odd_column_class: 'odd_column', //optional
+                        even_column_class: 'even_column', //optional
+                        odd_line_class: 'odd_line', //optional
+                        even_line_class: 'even_line', //optional
+                        table_id: 'table_id',
+                        table_class: 'table_class',
+                        caption: 'my caption',
+                        item_name: 'radio_name',
+                        data: showColumn, //requried
+                        selected_values: ['vvv', 'asdf']
+                    }
+            );
+            column_select_target = 'update';
             $('#select_columns_dialog').dialog('open');
         });
     }
-
+    var column_select_target;
     function selectColumnDialogSave() {
+        if (column_select_target === 'query') {
+            selectColumnDialogSave4Query();
+        }
+        else if (column_select_target === 'update') {
+            selectColumnDialogSave4Update();
+        }
+    }
+    function selectColumnDialogSave4Query() {
         var selectColumnUid = [];
 
         $('#select_columns_holder input[type="checkbox"]').each(function() {
@@ -171,6 +236,42 @@
         }
 
         $('#query_column_area_column_list').html(html);
+
+    }
+    function selectColumnDialogSave4Update() {
+        var selectColumnUid = [];
+
+        $('#select_columns_holder input[type="checkbox"]').each(function() {
+
+            if ($(this).prop('checked')) {
+                selectColumnUid.push($(this).attr('id'));
+            }
+        });
+
+        var html = "";
+
+        var uidMap = query_cache_data.columns;
+
+        for (var ind in selectColumnUid) {
+            var one = selectColumnUid[ind];
+            var info = uidMap[one];
+            html += "<div class='update_column_area_one_column'>";
+            var text = info.display;
+            html += "<span>" + text + "</span>";
+
+
+
+            var input = "= <input type='text' id='column_value_" + one + "' value=''>";
+
+            html += input;
+
+            html += "<input type='checkbox' id='column_value_type_" + one + "'> is Variable ";
+            html += "<span>,</span>";
+
+            html += "</div>";
+        }
+
+        $('#update_column_area_column_list').html(html);
 
     }
 
@@ -540,7 +641,7 @@
     function showAction() {
         $('.action_div').hide();
         $('#result').hide();
-        $('#' + $('#action_select').val()).show();
+        $('.' + $('#action_select').val()).show();
     }
 
     function create_post(method, data) {
@@ -600,7 +701,7 @@
         $('#query_select_tables select[class="query_select_join_method"]').each(function() {
             query_cache_data.line_id_logic_map[$(this).attr('id').replace(/query_select_join_method_id_/g, '')].join_type = $(this).val();
         });
-        $('#create_query_form .line_id_logic_map').val(JSON.stringify(query_cache_data.line_id_logic_map));
+        $('#create_query_form .line_id_logic_map').val(lingLogicMap2String());
 
 
 
@@ -612,7 +713,81 @@
         create_post('create_query', postVal);
 
     }
+    function create_update() {
 
+
+        populateTableVariableMap();
+        $('#create_update_form .tab_var_map').val(JSON.stringify(table_name_variale_map));
+        $('#create_update_form .setting_name').val($('#setting_name').val());
+        $('#create_update_form .uid_column_map').val(JSON.stringify(query_cache_data.global_uid_column_map));
+        $('#create_update_form .line_id_table_array').val(JSON.stringify(query_cache_data.line_id_table_name_array));
+        $('#create_update_form .table_info').val(JSON.stringify(table_info));
+
+
+
+        var columns = {};
+        $('#update_column_area_column_list input').each(function() {
+            var id;
+            if ($(this).attr('type') === 'text') {
+                id = $(this).attr('id').replace(/column_value_/g, '');
+            }
+            else {
+                id = $(this).attr('id').replace(/column_value_type_/g, '');
+            }
+
+            if (typeof columns[id] === 'undefined') {
+                columns[id] = {};
+            }
+
+            if ($(this).attr('type') === 'text') {
+                columns[id]['value']=$(this).val();
+            }
+            else {
+                columns[id]['is_variable']=$(this).prop('checked');
+            }
+
+
+
+        });
+        $('#create_update_form .column_data').val(JSON.stringify(columns));
+
+        var tableAlias = {};
+
+        $('#query_select_tables input[class="query_table_alias"]').each(function() {
+            tableAlias[$(this).attr('id').replace(/query_table_alias_id_/g, '')] = $(this).val();
+        });
+
+        $('#create_update_form .line_id_alias_map').val(JSON.stringify(tableAlias));
+
+        $('#query_select_tables select[class="query_select_join_method"]').each(function() {
+            query_cache_data.line_id_logic_map[$(this).attr('id').replace(/query_select_join_method_id_/g, '')].join_type = $(this).val();
+        });
+        $('#create_update_form .line_id_logic_map').val(lingLogicMap2String());
+
+
+
+
+
+
+        var postVal = $('#create_update_form').serialize();
+
+        create_post('create_update', postVal);
+
+    }
+
+    function lingLogicMap2String() {
+        var re = {};
+        var tmp = new QueryLogic();
+        for (var id in query_cache_data.line_id_logic_map) {
+            var d = {};
+            var s = query_cache_data.line_id_logic_map[id];
+
+            d.logic_type = s.logic_type;
+            d.logic_data = tmp.removeCircularStructureFromNod(tmp.createLogicNode(null, 0, s.logic_data));
+            re[id] = d;
+        }
+        return JSON.stringify(re);
+    }
 
     var table_name_variale_map = [];
     function populateTableVariableMap() {
@@ -696,7 +871,7 @@ Action:
 
 </div>
 <hr/>
-<div id='create_class' class="action_div">
+<div class="action_div create_class">
 
     <form id="create_class_form">
         <input class="tab_var_map" name="tab_var_map" value="" type="hidden">
@@ -724,7 +899,7 @@ Action:
 
 
 
-<div id='create_query' class="action_div">
+<div  class="action_div create_query">
 
     <span>SELECT </span>
 
@@ -736,8 +911,24 @@ Action:
     </div>
 
     <span> From </span>
+</div>
+<div  class="action_div create_delete">
+
+    <span>DELETE </span>
 
 
+
+    <span> From </span>
+</div>
+
+<div  class="action_div create_update">
+
+    <span>UPDATE </span>
+
+
+</div>
+
+<div id='' class="action_div create_query create_update create_delete">
     <div id="query_tables_area" style="float: none">
 
         <table>
@@ -751,14 +942,31 @@ Action:
     </div>
 
 
+
+</div>
+
+<div  class="action_div create_update">
+    <span>SET  </span>
+    <div id="update_column_area" style="float: none">
+        <div id="update_column_area_column_list">
+
+        </div>
+        <button id="update_column_area_bt">edit</button>
+    </div>
+
+</div>
+
+<div  class="action_div create_query create_delete create_update">
     <span> WHERE </span>
-
-
     <div id="query_where_area" style="float: none">
         <span id="query_on_clause_text_query_where_claus_id"></span>
         <button class="query_where_clause" id="query_where_claus_edit_bt">Edit</button>
     </div>
 
+
+</div>
+
+<div class="action_div create_query">
     <div class="create_button" style="margin-top: 30px">
         <form id="create_query_form">
             <input class="tab_var_map" name="tab_var_map" value="" type="hidden">
@@ -771,17 +979,33 @@ Action:
             <input class="table_info" name="table_info" value="" type="hidden">
 
             Query Name:<input class="query_name" name="query_name" value="" type="text">
+            <input type="checkbox" name='query_add_page_function'  value="1">Add Pagination Function
         </form>
         <button id="create_query_bt">Create Query</button>
     </div>
 </div>
 
-<div id='create_update' class="action_div">
+<div  class="action_div create_update">
+    <div class="create_button" style="margin-top: 30px">
+        <form id="create_update_form">
+            <input class="tab_var_map" name="tab_var_map" value="" type="hidden">
+            <input class="setting_name" name="setting_name" value="" type="hidden">
+            <input class="uid_column_map" name="uid_column_map" value="" type="hidden">
+            <input class="column_data" name="column_data" value="" type="hidden">
+            <input class="line_id_logic_map" name="line_id_logic_map" value="" type="hidden">
+            <input class="line_id_table_array" name="line_id_table_array" value="" type="hidden">
+            <input class="line_id_alias_map" name="line_id_alias_map" value="" type="hidden">
+            <input class="table_info" name="table_info" value="" type="hidden">
 
+            Update Function Name:<input class="update_name" name="update_name" value="" type="text">
+
+        </form>
+        <button id="create_update_bt">Create Update</button>
+    </div>
 
 </div>
 
-<div id='create_delete' class="action_div">
+<div  class="action_div create_delete">
 
 
 </div>

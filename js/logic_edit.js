@@ -5,6 +5,11 @@
 
 
 function QueryLogic(div_id, initData, conditionOptions) {
+
+    if(typeof div_id === 'undefined'){
+        return;
+    }
+
     if (typeof initData === 'undefined' || initData === null) {
         initData = this.createLogicNode(null, 0);
     }
@@ -423,8 +428,8 @@ QueryLogic.prototype.buildUidMap = function(node) {
 
 };
 
-QueryLogic.prototype.createLogicNode = function(parent, type) {
-    return {
+QueryLogic.prototype.createLogicNode = function(parent, type, copyFrom) {
+    var re = {
         single: true,
         finished: false,
         desc: "",
@@ -438,7 +443,54 @@ QueryLogic.prototype.createLogicNode = function(parent, type) {
         uuid: this.getUUID()
 
     };
+
+    if (typeof copyFrom !== 'undefined') {
+        for (var ind in re) {
+            if (typeof copyFrom[ind] !== 'undefined') {
+                if (ind === 'left' && copyFrom[ind] !== null) {
+
+
+                    re.left = this.createLogicNode(null, 0, copyFrom.left);;
+                    re.left.parent = re;
+                }
+                else if (ind === 'right' && copyFrom[ind] !== null) {
+                    re.right = this.createLogicNode(null, 0, copyFrom.right);
+                    re.right.parent = re;
+                }
+                else {
+                    re[ind] = copyFrom[ind];
+                }
+            }
+        }
+
+
+    }
+    return re;
 };
+
+QueryLogic.prototype.removeCircularStructureFromNod = function(node) {
+    if (node !== null) {
+        node.parent = null;
+        this.removeCircularStructureFromNod(node.left);
+        this.removeCircularStructureFromNod(node.right);
+
+    }
+
+    return node;
+
+};
+
+QueryLogic.prototype.buildeNodeFamilyRelationship = function(node,parent) {
+    if (node !== null) {
+        node.parent = parent;
+        this.buildeNodeFamilyRelationship(node.left,node);
+        this.buildeNodeFamilyRelationship(node.right,node);
+
+    }
+
+};
+
+
 
 QueryLogic.prototype.initEditButtonClickEvent = function() {
     var that = this;
