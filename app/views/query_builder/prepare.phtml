@@ -50,6 +50,17 @@
             return false;
         });
 
+        $('#create_delete_bt').click(function() {
+            create_delete();
+            return false;
+        });
+
+
+        $('#create_insert_bt').click(function() {
+            create_insert();
+            return false;
+        });
+
 
 
 
@@ -66,12 +77,86 @@
         initSelectTableEvent();
 
         prepareSelectColumnDialog();
+        prepareSelectOrderByColumnDialog();
         prepareConditionEditDilog();
     });
 
 
     var uid_column_map = {};
+    function prepareSelectOrderByColumnDialog() {
+        //select_columns_dialog
 
+        $('#order_by_select_columns_dialog').dialog({
+            autoOpen: false,
+            modal: true,
+            buttons: [
+                {
+                    text: "Save",
+                    click: function() {
+                        $(this).dialog("close");
+
+                        selectColumnDialogSave4OrderBy();
+
+                    }
+                },
+                {
+                    text: "Close",
+                    click: function() {
+                        $(this).dialog("close");
+                    }
+                }
+            ],
+            width: 800,
+            height: 600,
+            title: 'Column Pickup'
+        });
+        $('#query_order_by_add_bt').click(function() {
+
+
+            var uuid = "add_order_by_column_area_bt";
+
+
+            var columns = getUidColumnsList(uuid, null);
+
+            if (columns === null) {
+                return false;
+            }
+
+            var showColumn = [];
+            query_cache_data.columns = {};
+            for (var ind in columns) {
+                var one = columns[ind];
+                var obj = {
+                    display: (one.column.talias !== '' ? one.column.talias + "." : "") + one.column.cname,
+                    id: one.uuid
+
+                };
+                showColumn.push(obj);
+
+                query_cache_data.columns[one.uuid] = obj;
+            }
+
+            $('#order_by_select_columns_holder').init_item_table_pickup(
+                    {
+                        input_type: 'radio', //required
+                        column_size: 2, //optional
+                        line_size: 2, //optional, if column_size is gaven, this will be ignor.
+                        odd_column_class: 'odd_column', //optional
+                        even_column_class: 'even_column', //optional
+                        odd_line_class: 'odd_line', //optional
+                        even_line_class: 'even_line', //optional
+                        table_id: 'table_id',
+                        table_class: 'table_class',
+                        caption: 'Add One Order BY Column',
+                        item_name: 'order_by_radio',
+                        data: showColumn, //requried
+                        selected_values: ['vvv', 'asdf']
+                    }
+            );
+
+            $('#order_by_select_columns_dialog').dialog('open');
+        });
+    }
     function prepareSelectColumnDialog() {
         //select_columns_dialog
 
@@ -79,6 +164,18 @@
             autoOpen: false,
             modal: true,
             buttons: [
+                {
+                    text: "Select All",
+                    click: function() {
+                        $('#select_columns_holder input[type="checkbox"]').prop("checked", true);
+                    }
+                },
+                {
+                    text: "De-Select All",
+                    click: function() {
+                        $('#select_columns_holder input[type="checkbox"]').prop("checked", false);
+                    }
+                },
                 {
                     text: "Save",
                     click: function() {
@@ -97,7 +194,7 @@
             ],
             width: 800,
             height: 600,
-            title: 'Condition Edit'
+            title: 'Column Pickup'
         });
 
         $('#query_column_area_bt').click(function() {
@@ -137,7 +234,7 @@
                         even_line_class: 'even_line', //optional
                         table_id: 'table_id',
                         table_class: 'table_class',
-                        caption: 'my caption',
+                        caption: 'Select Columns',
                         item_name: 'radio_name',
                         data: showColumn, //requried
                         selected_values: ['vvv', 'asdf']
@@ -185,7 +282,7 @@
                         even_line_class: 'even_line', //optional
                         table_id: 'table_id',
                         table_class: 'table_class',
-                        caption: 'my caption',
+                        caption: 'Update Columns',
                         item_name: 'radio_name',
                         data: showColumn, //requried
                         selected_values: ['vvv', 'asdf']
@@ -194,6 +291,55 @@
             column_select_target = 'update';
             $('#select_columns_dialog').dialog('open');
         });
+
+        $('#insert_column_area_bt').click(function() {
+
+
+            var uuid = "insert_column_area_bt";
+
+
+            var columns = getUidColumnsList(uuid, null);
+
+            if (columns === null) {
+                return false;
+            }
+
+            var showColumn = [];
+            query_cache_data.columns = {};
+            for (var ind in columns) {
+                var one = columns[ind];
+                var obj = {
+                    display: (one.column.talias !== '' ? one.column.talias + "." : "") + one.column.cname,
+                    id: one.uuid
+
+                };
+                showColumn.push(obj);
+
+                query_cache_data.columns[one.uuid] = obj;
+            }
+
+            $('#select_columns_holder').init_item_table_pickup(
+                    {
+                        input_type: 'checkbox', //required
+                        column_size: 2, //optional
+                        line_size: 2, //optional, if column_size is gaven, this will be ignor.
+                        odd_column_class: 'odd_column', //optional
+                        even_column_class: 'even_column', //optional
+                        odd_line_class: 'odd_line', //optional
+                        even_line_class: 'even_line', //optional
+                        table_id: 'table_id',
+                        table_class: 'table_class',
+                        caption: 'Insert Columns',
+                        item_name: 'radio_name',
+                        data: showColumn, //requried
+                        selected_values: ['vvv', 'asdf']
+                    }
+            );
+            column_select_target = 'insert';
+            $('#select_columns_dialog').dialog('open');
+        });
+
+
     }
     var column_select_target;
     function selectColumnDialogSave() {
@@ -203,7 +349,76 @@
         else if (column_select_target === 'update') {
             selectColumnDialogSave4Update();
         }
+        else if (column_select_target === 'insert') {
+            selectColumnDialogSave4Insert();
+        }
+
     }
+    function selectColumnDialogSave4OrderBy() {
+        var selectColumnUid = null;
+
+        $('#order_by_select_columns_holder input[type="radio"]').each(function() {
+
+            if ($(this).prop('checked')) {
+                selectColumnUid = $(this).attr('id');
+            }
+        });
+        var html = "<div class='query_order_by_area_one_column'>";
+        if ($('#order_by_column_user_variable_radio').prop('checked')) {
+
+            var vn=$('#order_by_column_user_variable_name').val();
+            html += "<span>User's Variable:" +  vn+ "</span>";
+
+
+
+            var input = "<input class='query_order_by_column_variable' type='hidden' value='" +  vn+ "' >";
+            input += "<input class='query_order_by_type' type='hidden' value='variable' >";
+
+            html += input;
+        }
+        else {
+
+            if (selectColumnUid === null) {
+                //user do not select any column
+
+                return;
+            }
+
+
+
+            var uidMap = query_cache_data.columns;
+
+
+
+            var info = uidMap[selectColumnUid];
+
+            var text = info.display;
+            html += "<span>" + text + "</span>";
+
+
+
+            var input = "<span> DESC</span><input type='checkbox' class='query_order_by_desc' id='query_order_by_desc_" + selectColumnUid + "' >";
+            input += "<input class='query_order_by_column_id' type='hidden' value='" + selectColumnUid + "' >";
+            input += "<input class='query_order_by_type' type='hidden' value='fixed' >";
+
+            html += input;
+
+
+        }
+        html += "<button class='query_order_by_remove_bt'>delete</button>";
+
+        html += "</div>";
+        $('#query_ordery_by_area').append(html);
+
+
+        $('.query_order_by_remove_bt').click(function() {
+
+            $(this).parent().remove();
+            return false;
+        });
+
+    }
+
     function selectColumnDialogSave4Query() {
         var selectColumnUid = [];
 
@@ -265,13 +480,54 @@
 
             html += input;
 
-            html += "<input type='checkbox' id='column_value_type_" + one + "'> is Variable ";
+            html += "<input type='radio' name='column_value_type_" + one + "' value='pure' checked='checked'> Pure Value";
+            html += "<input type='radio' name='column_value_type_" + one + "' value='variable' > Variable ";
+            html += "<input type='radio' name='column_value_type_" + one + "' value='function'> Internal Function ";
             html += "<span>,</span>";
 
             html += "</div>";
         }
 
         $('#update_column_area_column_list').html(html);
+
+    }
+
+    function selectColumnDialogSave4Insert() {
+        var selectColumnUid = [];
+
+        $('#select_columns_holder input[type="checkbox"]').each(function() {
+
+            if ($(this).prop('checked')) {
+                selectColumnUid.push($(this).attr('id'));
+            }
+        });
+
+        var html = "";
+
+        var uidMap = query_cache_data.columns;
+
+        for (var ind in selectColumnUid) {
+            var one = selectColumnUid[ind];
+            var info = uidMap[one];
+            html += "<div class='update_column_area_one_column'>";
+            var text = info.display;
+            html += "<span>" + text + "</span>";
+
+
+
+            var input = "= <input type='text' id='column_value_" + one + "' value=''>";
+
+            html += input;
+
+            html += "<input type='radio' name='column_value_type_" + one + "' value='pure' checked='checked'> Pure Value";
+            html += "<input type='radio' name='column_value_type_" + one + "' value='variable' > Variable ";
+            html += "<input type='radio' name='column_value_type_" + one + "' value='function'> Internal Function ";
+            html += "<span>,</span>";
+
+            html += "</div>";
+        }
+
+        $('#insert_column_area_column_list').html(html);
 
     }
 
@@ -704,7 +960,29 @@
         $('#create_query_form .line_id_logic_map').val(lingLogicMap2String());
 
 
+        $order_by = [];
+        $("#query_ordery_by_area .query_order_by_area_one_column").each(function() {
 
+            var type = $(this).find('.query_order_by_type').first().val();
+
+            var cc = {type: type};
+            if (type === 'fixed') {
+
+
+                cc.column_id = $(this).find('.query_order_by_column_id').first().val();
+                cc.desc = $(this).find('.query_order_by_desc').first().prop('checked');
+
+            }
+            else {
+                cc.variable = $(this).find('.query_order_by_column_variable').first().val();
+
+
+            }
+
+            $order_by.push(cc);
+        });
+        // order_by_columns
+        $('#create_query_form .order_by_columns').val(JSON.stringify($order_by));
 
 
 
@@ -732,7 +1010,7 @@
                 id = $(this).attr('id').replace(/column_value_/g, '');
             }
             else {
-                id = $(this).attr('id').replace(/column_value_type_/g, '');
+                id = $(this).attr('name').replace(/column_value_type_/g, '');
             }
 
             if (typeof columns[id] === 'undefined') {
@@ -740,10 +1018,12 @@
             }
 
             if ($(this).attr('type') === 'text') {
-                columns[id]['value']=$(this).val();
+                columns[id]['value'] = $(this).val();
             }
-            else {
-                columns[id]['is_variable']=$(this).prop('checked');
+            else if ($(this).attr('type') === 'radio') {
+                if ($(this).prop('checked')) {
+                    columns[id]['type'] = $(this).val();
+                }
             }
 
 
@@ -772,6 +1052,88 @@
         var postVal = $('#create_update_form').serialize();
 
         create_post('create_update', postVal);
+
+    }
+    function create_delete() {
+
+
+        populateTableVariableMap();
+        $('#create_delete_form .tab_var_map').val(JSON.stringify(table_name_variale_map));
+        $('#create_delete_form .setting_name').val($('#setting_name').val());
+        $('#create_delete_form .uid_column_map').val(JSON.stringify(query_cache_data.global_uid_column_map));
+        $('#create_delete_form .line_id_table_array').val(JSON.stringify(query_cache_data.line_id_table_name_array));
+        $('#create_delete_form .table_info').val(JSON.stringify(table_info));
+
+
+        $('#create_delete_form .line_id_logic_map').val(lingLogicMap2String());
+
+
+        var postVal = $('#create_delete_form').serialize();
+
+        create_post('create_delete', postVal);
+
+    }
+    function create_insert() {
+
+
+        populateTableVariableMap();
+        $('#create_insert_form .tab_var_map').val(JSON.stringify(table_name_variale_map));
+        $('#create_insert_form .setting_name').val($('#setting_name').val());
+        $('#create_insert_form .uid_column_map').val(JSON.stringify(query_cache_data.global_uid_column_map));
+        $('#create_insert_form .line_id_table_array').val(JSON.stringify(query_cache_data.line_id_table_name_array));
+        $('#create_insert_form .table_info').val(JSON.stringify(table_info));
+
+
+
+        var columns = {};
+        $('#insert_column_area_column_list input').each(function() {
+            var id;
+            if ($(this).attr('type') === 'text') {
+                id = $(this).attr('id').replace(/column_value_/g, '');
+            }
+            else {
+                id = $(this).attr('name').replace(/column_value_type_/g, '');
+            }
+
+            if (typeof columns[id] === 'undefined') {
+                columns[id] = {};
+            }
+
+            if ($(this).attr('type') === 'text') {
+                columns[id]['value'] = $(this).val();
+            }
+            else if ($(this).attr('type') === 'radio') {
+                if ($(this).prop('checked')) {
+                    columns[id]['type'] = $(this).val();
+                }
+            }
+
+
+
+        });
+        $('#create_insert_form .column_data').val(JSON.stringify(columns));
+
+        var tableAlias = {};
+
+        $('#query_select_tables input[class="query_table_alias"]').each(function() {
+            tableAlias[$(this).attr('id').replace(/query_table_alias_id_/g, '')] = $(this).val();
+        });
+
+        $('#create_insert_form .line_id_alias_map').val(JSON.stringify(tableAlias));
+
+        $('#query_select_tables select[class="query_select_join_method"]').each(function() {
+            query_cache_data.line_id_logic_map[$(this).attr('id').replace(/query_select_join_method_id_/g, '')].join_type = $(this).val();
+        });
+        $('#create_insert_form .line_id_logic_map').val(lingLogicMap2String());
+
+
+
+
+
+
+        var postVal = $('#create_insert_form').serialize();
+
+        create_post('create_insert', postVal);
 
     }
 
@@ -816,6 +1178,7 @@ Action:
 <select id="action_select">
     <option value="create_class">Create Class</option>
     <option value="create_query">Create Query</option>
+    <option value="create_insert">Create Insert</option>
     <option value="create_update">Create Update</option>
     <option value="create_delete">Create Delete</option>
 </select>
@@ -927,8 +1290,15 @@ Action:
 
 
 </div>
+<div  class="action_div  create_insert">
 
-<div id='' class="action_div create_query create_update create_delete">
+    <span>INSERT INTO </span>
+
+
+</div>
+
+
+<div id='' class="action_div create_query create_update create_delete create_insert">
     <div id="query_tables_area" style="float: none">
 
         <table>
@@ -955,6 +1325,16 @@ Action:
     </div>
 
 </div>
+<div  class="action_div create_insert">
+    <span>insert values:  </span>
+    <div id="insert_column_area" style="float: none">
+        <div id="insert_column_area_column_list">
+
+        </div>
+        <button id="insert_column_area_bt">edit</button>
+    </div>
+
+</div>
 
 <div  class="action_div create_query create_delete create_update">
     <span> WHERE </span>
@@ -967,6 +1347,15 @@ Action:
 </div>
 
 <div class="action_div create_query">
+    <span> ORDER BY </span>
+    <div id="query_ordery_by_area" style="float: none">
+
+
+    </div>
+    <button class="query_order_by_bt" id="query_order_by_add_bt">Add</button>
+</div>
+
+<div class="action_div create_query">
     <div class="create_button" style="margin-top: 30px">
         <form id="create_query_form">
             <input class="tab_var_map" name="tab_var_map" value="" type="hidden">
@@ -976,9 +1365,12 @@ Action:
             <input class="line_id_logic_map" name="line_id_logic_map" value="" type="hidden">
             <input class="line_id_table_array" name="line_id_table_array" value="" type="hidden">
             <input class="line_id_alias_map" name="line_id_alias_map" value="" type="hidden">
+            <input class="order_by_columns" name="order_by_columns" value="" type="hidden">
             <input class="table_info" name="table_info" value="" type="hidden">
-
-            Query Name:<input class="query_name" name="query_name" value="" type="text">
+            <span>Limit:</span> <span>From(0 base):</span><input class="query_limit_from" name="query_limit_from" value="" type="text">
+            <span>Row Number:</span><input class="query_limit_row_number" name="query_limit_row_number" value="" type="text">
+            <br/>
+            <span> Query Name:</span><input class="query_name" name="query_name" value="" type="text">
             <input type="checkbox" name='query_add_page_function'  value="1">Add Pagination Function
         </form>
         <button id="create_query_bt">Create Query</button>
@@ -1004,10 +1396,44 @@ Action:
     </div>
 
 </div>
+<div  class="action_div create_insert">
+    <div class="create_button" style="margin-top: 30px">
+        <form id="create_insert_form">
+            <input class="tab_var_map" name="tab_var_map" value="" type="hidden">
+            <input class="setting_name" name="setting_name" value="" type="hidden">
+            <input class="uid_column_map" name="uid_column_map" value="" type="hidden">
+            <input class="column_data" name="column_data" value="" type="hidden">
+            <input class="line_id_logic_map" name="line_id_logic_map" value="" type="hidden">
+            <input class="line_id_table_array" name="line_id_table_array" value="" type="hidden">
+            <input class="line_id_alias_map" name="line_id_alias_map" value="" type="hidden">
+            <input class="table_info" name="table_info" value="" type="hidden">
+
+            Insert Function Name:<input class="insert_name" name="insert_name" value="" type="text">
+            <input type="checkbox" name='insert_return_last_id'  value="1">Return Last ID
+        </form>
+        <button id="create_insert_bt">Create Insert</button>
+    </div>
+
+</div>
 
 <div  class="action_div create_delete">
 
+    <div class="create_button" style="margin-top: 30px">
+        <form id="create_delete_form">
+            <input class="tab_var_map" name="tab_var_map" value="" type="hidden">
+            <input class="setting_name" name="setting_name" value="" type="hidden">
+            <input class="uid_column_map" name="uid_column_map" value="" type="hidden">
+            <input class="column_data" name="column_data" value="" type="hidden">
+            <input class="line_id_logic_map" name="line_id_logic_map" value="" type="hidden">
+            <input class="line_id_table_array" name="line_id_table_array" value="" type="hidden">
+            <input class="line_id_alias_map" name="line_id_alias_map" value="" type="hidden">
+            <input class="table_info" name="table_info" value="" type="hidden">
 
+            Delete Function Name:<input class="delete_name" name="delete_name" value="" type="text">
+
+        </form>
+        <button id="create_delete_bt">Create Delete</button>
+    </div>
 </div>
 
 
@@ -1064,6 +1490,7 @@ Action:
     <hr/>
 
     <div id="condition_review">
+
         <textarea id="condtion_review_text" readonly="readonly" cols="80"></textarea>
     </div>
 
@@ -1073,6 +1500,13 @@ Action:
     <div id="select_columns_holder"></div>
 
 
+</div>
+<div id="order_by_select_columns_dialog" style="display: none;">
+    <div id="order_by_select_columns_holder"></div>
+
+    <div>
+        <input type="radio" id='order_by_column_user_variable_radio' name="order_by_radio">User's Variable:<input type="text" id='order_by_column_user_variable_name'>
+    </div>
 </div>
 <? include dirname(__FILE__) . '/../share/logic_edit.phtml'; ?>
 

@@ -326,6 +326,7 @@ class Query_builderController extends BasicController {
         $table_varialbe_map = json_decode($_POST['tab_var_map'], true);
 
 
+        $oderBy = json_decode($_POST['order_by_columns'], true);
 
 
         $this->set('function_name', $_POST['query_name'], true);
@@ -389,10 +390,38 @@ class Query_builderController extends BasicController {
 
         $this->set('where_claus', $whereCluasStr);
 
+        if (isset($one)) {
+            unset($one);
+        }
+        foreach ($oderBy as &$one) {
+            if ($one['type'] === 'variable') {
+                $variables[$one['variable']] = 1;
+                $descVairalbeName='ordery_by_' . $one['variable'] . '_is_desc';
+                $one['desc_variable']=$descVairalbeName;
+                $variables[$descVairalbeName] = 1;
+            } else {
+                $column = $uidColumnMap[$one['column_id']];
+                $tableFullName = $lineIdTableFullNameMap[$column['line_uid']];
+                $tableVariable = $tableVariableMap[$tableFullName];
+                $one['column_name'] = $column['name'];
+                $one['table_alias'] = $tableAlias;
+                $one['table_varialbe'] = $tableVariable;
+            }
+        }
+
+        $this->set('order_by', $oderBy);
+
+        if (!empty($_POST['query_limit_row_number'])) {
+            $num = intval($_POST['query_limit_row_number']);
+            $from = $_POST['query_limit_from'] === '' ? 0 : intval($_POST['query_limit_from']);
+            if ($num > 0 && $from >= 0) {
+                $this->set('limit', array('from' => $from, 'num' => $num));
+            }
+        }
+
+
         $this->set('variables', array_keys($variables));
         $this->set('pagination_function_enable', !empty($_POST['query_add_page_function']));
-
-
 
         //MLog::dExport($_POST);
 //        MLog::dExport($columns, 'columns');
@@ -403,6 +432,7 @@ class Query_builderController extends BasicController {
 //        MLog::dExport($lineIdLogicMap, '$lineIdLogicMap');
 //        MLog::dExport($uidColumnMap, '$uidColumnMap');
 //        MLog::dExport($variables, '$variables');
+        MLog::dExport($oderBy, '$oderBy');
     }
 
     public function create_update() {
@@ -465,7 +495,7 @@ class Query_builderController extends BasicController {
 
 
         $cc = array();
-        foreach ($columns as $id=>$detail) {
+        foreach ($columns as $id => $detail) {
 
             $column = $uidColumnMap[$id];
             $tableAlias = $lineIdAliasMap[$column['line_uid']];
@@ -473,13 +503,13 @@ class Query_builderController extends BasicController {
             $tableVariable = $tableVariableMap[$tableFullName];
             $cc[] = array(
                 'column_name' => $column['name'],
-                'value'=>$detail['value'],
-                'is_variable'=>$detail['is_variable'],
+                'value' => $detail['value'],
+                'type' => $detail['type'],
                 'table_alias' => $tableAlias,
                 'table_varialbe' => $tableVariable);
 
-            if($detail['is_variable']){
-                $variables[$detail['value']]=1;
+            if ($detail['type'] === 'variable') {
+                $variables[$detail['value']] = 1;
             }
         }
 
@@ -493,6 +523,179 @@ class Query_builderController extends BasicController {
 
         //MLog::dExport($_POST);
 //        MLog::dExport($columns, 'columns');
+//        MLog::dExport($tableInfo, '$tableInfo');
+//        MLog::dExport($lineIdTableArray, '$uidTableMap');
+//        MLog::dExport($lineIdAliasMap, '$lineIdAliasMap');
+//        MLog::dExport($tableVariableMap, '$tableVariableMap');
+//        MLog::dExport($lineIdLogicMap, '$lineIdLogicMap');
+//        MLog::dExport($uidColumnMap, '$uidColumnMap');
+//        MLog::dExport($variables, '$variables');
+    }
+
+    public function create_delete() {
+        $this->setLayout("ajax.phtml");
+
+
+
+        $lineIdTableArray = json_decode($_POST['line_id_table_array'], true);
+        $uidColumnMap = json_decode($_POST['uid_column_map'], true);
+        $lineIdAliasMap = json_decode($_POST['line_id_alias_map'], true);
+        $lineIdLogicMap = json_decode($_POST['line_id_logic_map'], true);
+        $table_varialbe_map = json_decode($_POST['tab_var_map'], true);
+
+
+
+
+        $this->set('function_name', $_POST['delete_name'], true);
+        $this->set('table_size', count($lineIdAliasMap));
+
+        $tableVariableMap = array();
+        foreach ($table_varialbe_map as $one) {
+            $tableVariableMap["{$one['db']}.{$one['table']}"] = $one['varialbe'];
+        }
+
+        $this->set('tname_veriable_map', $tableVariableMap);
+
+        $lineIdTableFullNameMap = array();
+        $fromTables = array();
+        $variables = array();
+        foreach ($lineIdTableArray as $one) {
+            $lineId = $one['line_id'];
+            $lineIdTableFullNameMap[$lineId] = $one['table_full_name'];
+            $oneFromTable = array();
+            $oneFromTable['line_id'] = $lineId;
+            $oneFromTable['table_full_name'] = $one['table_full_name'];
+            $oneFromTable['table_alias'] = $lineIdAliasMap[$lineId];
+            $oneFromTable['table_variable'] = '$this->' . $tableVariableMap[$oneFromTable['table_full_name']];
+
+            if (!empty($lineIdLogicMap[$lineId])) {
+                $logic = $lineIdLogicMap[$lineId];
+
+                $logicStr = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
+                $oneFromTable['logic_string'] = $logicStr;
+                $oneFromTable['join_type'] = $logic['join_type'];
+            }
+
+            $fromTables[] = $oneFromTable;
+        }
+
+        $this->set('frome_tables', $fromTables);
+
+        $whereCluasStr = "";
+
+        if (!empty($lineIdLogicMap['query_where_claus_id'])) {
+            $whereCluasStr = $this->logic2String($lineIdLogicMap['query_where_claus_id']['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
+        }
+
+        $this->set('where_claus', $whereCluasStr);
+
+
+
+
+
+        $this->set('variables', array_keys($variables));
+
+
+
+        //MLog::dExport($_POST);
+//        MLog::dExport($columns, 'columns');
+//        MLog::dExport($tableInfo, '$tableInfo');
+//        MLog::dExport($lineIdTableArray, '$uidTableMap');
+//        MLog::dExport($lineIdAliasMap, '$lineIdAliasMap');
+//        MLog::dExport($tableVariableMap, '$tableVariableMap');
+//        MLog::dExport($lineIdLogicMap, '$lineIdLogicMap');
+//        MLog::dExport($uidColumnMap, '$uidColumnMap');
+//        MLog::dExport($variables, '$variables');
+    }
+
+    public function create_insert() {
+        $this->setLayout("ajax.phtml");
+
+        $columns = json_decode($_POST['column_data'], true);
+
+
+        $lineIdTableArray = json_decode($_POST['line_id_table_array'], true);
+        $uidColumnMap = json_decode($_POST['uid_column_map'], true);
+        $lineIdAliasMap = json_decode($_POST['line_id_alias_map'], true);
+        $lineIdLogicMap = json_decode($_POST['line_id_logic_map'], true);
+        $table_varialbe_map = json_decode($_POST['tab_var_map'], true);
+
+
+
+
+        $this->set('function_name', $_POST['insert_name'], true);
+        $this->set('table_size', count($lineIdAliasMap));
+
+        $tableVariableMap = array();
+        foreach ($table_varialbe_map as $one) {
+            $tableVariableMap["{$one['db']}.{$one['table']}"] = $one['varialbe'];
+        }
+
+        $this->set('tname_veriable_map', $tableVariableMap);
+
+        $lineIdTableFullNameMap = array();
+        $fromTables = array();
+        $variables = array();
+        foreach ($lineIdTableArray as $one) {
+            $lineId = $one['line_id'];
+            $lineIdTableFullNameMap[$lineId] = $one['table_full_name'];
+            $oneFromTable = array();
+            $oneFromTable['line_id'] = $lineId;
+            $oneFromTable['table_full_name'] = $one['table_full_name'];
+            $oneFromTable['table_alias'] = $lineIdAliasMap[$lineId];
+            $oneFromTable['table_variable'] = '$this->' . $tableVariableMap[$oneFromTable['table_full_name']];
+
+            if (!empty($lineIdLogicMap[$lineId])) {
+                $logic = $lineIdLogicMap[$lineId];
+
+                $logicStr = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
+                $oneFromTable['logic_string'] = $logicStr;
+                $oneFromTable['join_type'] = $logic['join_type'];
+            }
+
+            $fromTables[] = $oneFromTable;
+        }
+
+        $this->set('frome_tables', $fromTables);
+
+        $whereCluasStr = "";
+
+        if (!empty($lineIdLogicMap['query_where_claus_id'])) {
+            $whereCluasStr = $this->logic2String($lineIdLogicMap['query_where_claus_id']['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
+        }
+
+        $this->set('where_claus', $whereCluasStr);
+
+
+        $cc = array();
+        foreach ($columns as $id => $detail) {
+
+            $column = $uidColumnMap[$id];
+            $tableAlias = $lineIdAliasMap[$column['line_uid']];
+            $tableFullName = $lineIdTableFullNameMap[$column['line_uid']];
+            $tableVariable = $tableVariableMap[$tableFullName];
+            $cc[] = array(
+                'column_name' => $column['name'],
+                'value' => $detail['value'],
+                'type' => $detail['type'],
+                'table_alias' => $tableAlias,
+                'table_varialbe' => $tableVariable);
+
+            if ($detail['type'] === 'variable') {
+                $variables[$detail['value']] = 1;
+            }
+        }
+
+        $this->set('columns', $cc);
+
+
+
+        $this->set('variables', array_keys($variables));
+
+
+
+        //MLog::dExport($_POST);
+        MLog::dExport($columns, 'columns');
 //        MLog::dExport($tableInfo, '$tableInfo');
 //        MLog::dExport($lineIdTableArray, '$uidTableMap');
 //        MLog::dExport($lineIdAliasMap, '$lineIdAliasMap');

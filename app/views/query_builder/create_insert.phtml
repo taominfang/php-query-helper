@@ -7,10 +7,10 @@ foreach ($this->variables as $one) {
 
 try {
 
-$updateClause="UPDATE  ";
+$insertClause="INSERT INTO  ";
 <?
 foreach ($this->frome_tables as $one) {
-    echo '$updateClause.="';
+    echo '$insertClause.="';
 
     echo '{' . $one['table_variable'] . '}';
 
@@ -22,47 +22,44 @@ foreach ($this->frome_tables as $one) {
 
     echo "\";\n";
 
-    //update only support ont table;
+    //insert only support ont table;
     break;
 }
 ?>
-$bind_arr = array();
 
-$setClumns = " SET ";
+$bind_arr = array();
+$columns = "(";
+$values = " values( ";
 <?
 $first = true;
 foreach ($this->columns as $one) {
     if (!$first) {
-        echo '$' . "setClumns .=',`{$one['column_name']}`=';";
+        echo '$' . "columns .=',`{$one['column_name']}`';\n";
+        echo '$' . "values .=',';";
     } else {
-        echo '$' . "setClumns .=' `{$one['column_name']}`=';";
+        echo '$' . "columns .=' `{$one['column_name']}`';\n";
     }
     $first = false;
 
 
-    echo "";
 
 
     if ($one['type'] === 'variable') {
-        echo '$' . "setClumns .=':{$one['value']}';\n";
+        echo '$' . "values .=':{$one['value']}';\n";
+       
     } else if ($one['type'] === 'pure') {
-        echo '$' . "setClumns .=':fix_{$one['column_name']}';\n";
-        echo '$' . "bind_arr[':fix_{$one['column_name']}']='" . str_replace("'", "\\" . "'", $one['value']) . "';\n";
+        echo '$' . "values .=':fix_{$one['column_name']}';\n";
+        echo '$' . "bind_arr[':fix_{$one['column_name']}']='" . str_replace("'", "\\" . "'", $one['value']) . "';";
     } else if ($one['type'] === 'function') {
-        echo '$' . "setClumns .='{$one['value']}';\n";
+        echo '$' . "values .='{$one['value']}';\n";
     }
-
-
-
-
     echo "\n";
 }
 
-echo '$updateClause.=$setClumns;';
+echo '$columns .= ")";' . "\n";
+echo '$values .= ") ";' . "\n";
 
-if (!empty($this->where_claus)) {
-    echo '$updateClause.=" ' . "WHERE {$this->where_claus}\";\n";
-}
+echo '$insertClause.=$columns.$values;';
 ?>
 
 
@@ -79,7 +76,8 @@ foreach ($this->variables as $one) {
 
 
 
-$stmt = $dbh->prepare($updateClause);
+
+$stmt = $dbh->prepare($insertClause);
 
 $stmt_r = $stmt->execute($bind_arr);
 if($stmt_r){

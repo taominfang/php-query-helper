@@ -1,4 +1,4 @@
-
+<? $used_variables = array(); ?>
 public function <?= $this->function_name ?>($dbh<?
 foreach ($this->variables as $one) {
     echo ', $' . $one;
@@ -15,7 +15,11 @@ foreach ($this->columns as $ind => $one) {
     }
 
     if (empty($one['table_alias'])) {
-        $columnName = '{$this->' . $one['table_varialbe'] . '}.' . $one['column_name'];
+        if ($this->table_size === 1) {
+            $columnName = $one['column_name'];
+        } else {
+            $columnName = '{$this->' . $one['table_varialbe'] . '}.' . $one['column_name'];
+        }
     } else {
         $columnName = "{$one['table_alias']}.{$one['column_name']}";
     }
@@ -50,11 +54,60 @@ if (!empty($this->where_claus)) {
 }
 ?>
 
+
+
+$order_clause="";
+
+<?
+if (!empty($this->order_by)) {
+    echo '$order_clause .=" ORDER BY ";' . "\n";
+    foreach ($this->order_by as $ind => $one) {
+        if ($ind !== 0) {
+            echo '$order_clause.=", ";' . "\n";
+        }
+
+        if ($one['type'] === 'fixed') {
+            if (empty($one['table_alias'])) {
+                if ($this->table_size === 1) {
+                    $columnName = $one['column_name'];
+                } else {
+                    $columnName = '{$this->' . $one['table_varialbe'] . '}.' . $one['column_name'];
+                }
+            } else {
+                $columnName = "{$one['table_alias']}.{$one['column_name']}";
+            }
+            echo '$order_clause.="' . $columnName . "\";\n";
+
+            if ($one['desc']) {
+                echo '$order_clause.=" DESC";' . "\n";
+            }
+        } else {
+            $used_variables[$one['variable']] = 1;
+            $used_variables[$one['desc_variable']] = 1;
+
+            echo '$order_clause.="{$' . $one['variable'] . '}";' . "\n";
+            echo '$order_clause.=$' . $one['desc_variable'] . '?" DESC":"";' . "\n";
+        }
+    }
+}
+?>
+
+$limit_clause="";
+
+<?
+if (!empty($this->limit)) {
+    $lstr = " LIMIT {$this->limit['from']} ,{$this->limit['num']}";
+    echo '$limit_clause.="' . $lstr . "\";\n";
+}
+?>
+
 $bind_arr = array();
 
 <?
 foreach ($this->variables as $one) {
-    echo '$bind_arr[\':' . $one . '\']=$' . $one . ";\n";
+    if (empty($used_variables[$one])) {
+        echo '$bind_arr[\':' . $one . '\']=$' . $one . ";\n";
+    }
 }
 ?>
 
@@ -95,7 +148,7 @@ foreach ($this->variables as $one) {
     }
     else{
     $from=$pageNo*$pageSize;
-    $stmt2= $dbh->prepare($selectColumns. $queryBase." limit {$from},{$pageSize}");
+    $stmt2= $dbh->prepare($selectColumns. $queryBase.$order_clause." limit {$from},{$pageSize}");
     $stmt_rv2 = $stmt2->execute($bind_arr);
     if($stmt_rv2){
     $re['data']=$stmt2->fetchAll();
@@ -112,8 +165,11 @@ foreach ($this->variables as $one) {
     }
 <? else: ?>
 
-    $stmt = $dbh->prepare($selectColumns.$queryBase);
+    $runQuery=$selectColumns . $queryBase . $order_clause . $limit_clause;
 
+    //echo $runQuery."\n";
+
+    $stmt = $dbh->prepare($runQuery);
     $stmt_rv = $stmt->execute($bind_arr);
 
     if ($stmt_rv) {
