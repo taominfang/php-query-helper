@@ -16,7 +16,7 @@ $t1 = explode('?', $_SERVER['REQUEST_URI']);
 
 
 if (isset($t1[0])) {
-    $uri = substr( $t1[0],__PROJECT_HEADER_LENGTH__);
+    $uri = substr($t1[0], __PROJECT_HEADER_LENGTH__);
 } else {
     $uri = '/';
 }
@@ -106,20 +106,20 @@ try {
         $controller->post_filter($method);
     }
 
-    if($controller->redirect_url===null){
+    if ($controller->redirect_url === null) {
 
-        $view->rendering();
-    }
-
-    else{
+        $v = $controller->getView();
+        if ($v !== null) {
+            $v->rendering();
+        }
+    } else {
         header("Location: {$controller->redirect_url}");
     }
-
 } catch (Exception $e) {
 
-    $ee="Exception:" . $e->getMessage() . ' in file:' . $e->getFile() . ' line [' . $e->getLine() . ']';
+    $ee = "Exception:" . $e->getMessage() . ' in file:' . $e->getFile() . ' line [' . $e->getLine() . ']';
     MLog::e($e->getTraceAsString());
-    $view->assign('errorMessage',$ee );
+    $view->assign('errorMessage', $ee);
     $view->display('error/general_error.phtml');
     return;
 }

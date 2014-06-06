@@ -18,6 +18,10 @@ class BasicController {
         $this->view=$v;
     }
 
+    public function getView(){
+        return $this->view;
+    }
+
     public function setLayout($layout_name) {
         $this->view->setLayout($layout_name);
     }
