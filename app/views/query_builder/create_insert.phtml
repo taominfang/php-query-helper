@@ -81,7 +81,12 @@ $stmt = $dbh->prepare($insertClause);
 
 $stmt_r = $stmt->execute($bind_arr);
 if($stmt_r){
-return $stmt->rowCount();
+<?if($this->return_last_id):?>
+ return $dbh->lastInsertId ();
+ <?else:?>
+ return $stmt->rowCount();
+ <?endif?>
+
 }
 else {
 

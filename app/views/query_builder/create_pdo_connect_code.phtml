@@ -5,6 +5,17 @@ $port='<?= $this->port ?>';
 $user='<?= $this->user ?>';
 $password='<?= $this->password ?>';
 
-$dsn = "{$engine}:host={$host};port={$port}";
 
-$dbh= new PDO($dsn, $user, $password);
+
+
+$dsn = "{$engine}:host={$host};port={$port};dbname=";
+
+<?if(!empty($this->dbname)):?>
+$dsn.="<?=$this->dbname?>";
+<?endif?>
+$initPDO=array();
+//$dsn.=';charset=UTF8';
+
+//$initPDO[PDO::MYSQL_ATTR_INIT_COMMAND] = "SET NAMES utf8";
+
+$dbh= new PDO($dsn, $user, $password,$initPDO);

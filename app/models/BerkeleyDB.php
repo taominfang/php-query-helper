@@ -13,6 +13,7 @@ class BerkeleyDB {
 
     public function __construct($dbFilePath, $openMode = "c") {
         $this->db_file_handle = dba_open($dbFilePath, $openMode);
+        
 
         if ($this->db_file_handle === false) {
             throw new Exception("Failt to oepn {$dbFilePath}");

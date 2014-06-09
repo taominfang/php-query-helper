@@ -39,6 +39,7 @@ class Query_builderController extends BasicController {
 
             try {
                 $this->pdo_db = new PDO($dsn, $this->project_db->user, $this->project_db->password);
+              
             } catch (PDOException $exc) {
                 MLog::e($exc->getTraceAsString());
                 $this->pdo_db = null;
@@ -57,7 +58,7 @@ class Query_builderController extends BasicController {
         } else if (!empty($_GET[$pName])) {
             $this->project_name = $_GET[$pName];
 
-            $ldb = new BerkeleyDB(__LOCAL_DB_FOLDER__ . '/index.db');
+            $ldb = new FileDB(__LOCAL_DB_FOLDER__ . '/index.db');
 
 
             $this->project_index = $ldb->fetch($this->project_name);
@@ -81,7 +82,7 @@ class Query_builderController extends BasicController {
         }
 
 
-        $ldb = new BerkeleyDB(__LOCAL_DB_FOLDER__ . '/index.db');
+        $ldb = new FileDB(__LOCAL_DB_FOLDER__ . '/index.db');
 
         $this->set('projects', $ldb->fetchAll());
         $ldb->close();
@@ -99,7 +100,7 @@ class Query_builderController extends BasicController {
     }
 
     public function save_project() {
-        $ldb = new BerkeleyDB(__LOCAL_DB_FOLDER__ . '/index.db');
+        $ldb = new FileDB(__LOCAL_DB_FOLDER__ . '/index.db');
 
 
         if (empty($_POST['project'])) {
@@ -125,12 +126,15 @@ class Query_builderController extends BasicController {
         $ldb->close();
         $proDB->close();
         $_SESSION['project_index'] = $project_index;
+        
+        MLog::d("projFileName:{$projFileName} index:{$project_index}");
         $this->redirect($this->view->popUrl("query_builder/select_tables"));
     }
 
     public function select_tables() {
 
         $this->openPDOdb();
+       
 
         if ($this->pdo_db === null) {
             if ($this->project_name !== null) {
@@ -176,7 +180,7 @@ class Query_builderController extends BasicController {
         if (!empty($_GET['del'])) {
 
             $dn = $_GET['del'];
-            $ldb = new BerkeleyDB(__LOCAL_DB_FOLDER__ . '/index.db');
+            $ldb = new FileDB(__LOCAL_DB_FOLDER__ . '/index.db');
 
             $pn = $ldb->fetch($dn);
 
@@ -272,12 +276,16 @@ class Query_builderController extends BasicController {
 
         if ($this->project_db !== null) {
             $this->project_db->close();
-            MLog::dExport($this->project_db);
+           
             $this->set('engine', $this->project_db->engine);
             $this->set('host', $this->project_db->host);
             $this->set('port', $this->project_db->port);
             $this->set('user', $this->project_db->user);
             $this->set('password', $this->project_db->password);
+            if(!empty($_POST['db_name'])){
+                $this->set('dbname',$_POST['db_name']);
+            }
+            
         } else {
             MLog::d("open project db fail!");
         }
@@ -692,7 +700,12 @@ class Query_builderController extends BasicController {
 
         $this->set('variables', array_keys($variables));
 
-
+        if(!empty($_POST['insert_return_last_id'])){
+             $this->set('return_last_id', true);
+        }
+        else{
+             $this->set('return_last_id', false);
+        }
 
         //MLog::dExport($_POST);
         MLog::dExport($columns, 'columns');

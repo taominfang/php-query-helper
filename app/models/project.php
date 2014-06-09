@@ -10,9 +10,9 @@
  *
  * @author mtao60
  */
-include_once dirname(__FILE__) . '/./BerkeleyDB.php';
+include_once realpath( dirname(__FILE__)) . '/FileDB.php';
 
-class Project extends BerkeleyDB {
+class Project extends FileDB {
 
     //put your code here
 

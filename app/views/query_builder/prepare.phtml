@@ -366,12 +366,12 @@
         var html = "<div class='query_order_by_area_one_column'>";
         if ($('#order_by_column_user_variable_radio').prop('checked')) {
 
-            var vn=$('#order_by_column_user_variable_name').val();
-            html += "<span>User's Variable:" +  vn+ "</span>";
+            var vn = $('#order_by_column_user_variable_name').val();
+            html += "<span>User's Variable:" + vn + "</span>";
 
 
 
-            var input = "<input class='query_order_by_column_variable' type='hidden' value='" +  vn+ "' >";
+            var input = "<input class='query_order_by_column_variable' type='hidden' value='" + vn + "' >";
             input += "<input class='query_order_by_type' type='hidden' value='variable' >";
 
             html += input;
@@ -910,7 +910,21 @@
     }
 
     function create_pdo() {
-        create_post('create_pdo_connect_code', '');
+
+        var c = 0;
+        var dn = null;
+        for (var ind in db_table_info) {
+            dn = ind;
+            c++;
+        }
+        if (c === 1 && dn !== null) {
+            $('#create_class_form .db_name').val(dn);
+        }
+
+
+
+        var postVal = $('#create_class_form').serialize();
+        create_post('create_pdo_connect_code', postVal);
     }
     function create_class() {
 
@@ -1210,24 +1224,24 @@ Action:
         <caption>Table name variables</caption>
         <tbody id="table_name_variables">
             <? foreach ($this->db_table_info as $db => $tables): ?>
-                <? foreach ($tables as $tableName => $tmp1): ?>
-                    <tr id="tvm_<?= $db ?>_<?= $tableName ?>">
-                        <td >
-                            <?= $db ?>.<?= $tableName ?>
-                            <input type="hidden" value="<?= $db ?>" class="db_name">
-                            <input type="hidden" value="<?= $tableName ?>" class="table_name">
-                            <input type="hidden" value="tvm_<?= $db ?>_<?= $tableName ?>" class="tvm_id">
-                        </td>
-                        <td>
-                            <input value="<?= strtoupper($db) ?>_<?= strtoupper($tableName) ?>" size="100" class="varialbe_name">
-                        </td>
+            <? foreach ($tables as $tableName => $tmp1): ?>
+            <tr id="tvm_<?= $db ?>_<?= $tableName ?>">
+                <td >
+                    <?= $db ?>.<?= $tableName ?>
+                    <input type="hidden" value="<?= $db ?>" class="db_name">
+                    <input type="hidden" value="<?= $tableName ?>" class="table_name">
+                    <input type="hidden" value="tvm_<?= $db ?>_<?= $tableName ?>" class="tvm_id">
+                </td>
+                <td>
+                    <input value="<?= strtoupper($db) ?>_<?= strtoupper($tableName) ?>" size="100" class="varialbe_name">
+                </td>
 
-                        <td>
-                            <input value="1" type="checkbox" class="db_name_required" checked="checked"> required DB name
-                        </td>
-                    </tr>
+                <td>
+                    <input value="1" type="checkbox" class="db_name_required" checked="checked"> required DB name
+                </td>
+            </tr>
 
-                <? endforeach; ?>
+            <? endforeach; ?>
             <? endforeach; ?>
         </tbody>
     </table>
@@ -1239,6 +1253,7 @@ Action:
     <form id="create_class_form">
         <input class="tab_var_map" name="tab_var_map" value="" type="hidden">
         <input class="setting_name" name="setting_name" value="" type="hidden">
+        <input class="db_name" name="db_name" value="" type="hidden">
         <table>
             <tbody>
                 <tr>
