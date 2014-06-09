@@ -2,7 +2,7 @@
 
 
 
-define('__LOCAL_DB_FOLDER__','D:/Php/php-query-helper/tmp');
+define('__LOCAL_DB_FOLDER__','/Users/mtao60/tmp/query_builder');
 
 
 ?>
