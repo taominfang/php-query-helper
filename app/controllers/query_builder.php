@@ -39,7 +39,6 @@ class Query_builderController extends BasicController {
 
             try {
                 $this->pdo_db = new PDO($dsn, $this->project_db->user, $this->project_db->password);
-              
             } catch (PDOException $exc) {
                 MLog::e($exc->getTraceAsString());
                 $this->pdo_db = null;
@@ -126,7 +125,7 @@ class Query_builderController extends BasicController {
         $ldb->close();
         $proDB->close();
         $_SESSION['project_index'] = $project_index;
-        
+
         MLog::d("projFileName:{$projFileName} index:{$project_index}");
         $this->redirect($this->view->popUrl("query_builder/select_tables"));
     }
@@ -134,7 +133,7 @@ class Query_builderController extends BasicController {
     public function select_tables() {
 
         $this->openPDOdb();
-       
+
 
         if ($this->pdo_db === null) {
             if ($this->project_name !== null) {
@@ -240,12 +239,16 @@ class Query_builderController extends BasicController {
             throw new Exception("Open db fail");
         }
 
+
+        $savedHeader = "";
+
         foreach ($tableInfo as $db => $tables) {
             $this->pdo_db->exec("use " . $db);
 
             $tabs = array();
 
             foreach ($tables as $table) {
+                $savedHeader.="__" . $db . "-" . $table;
                 $oneTab = array();
                 foreach ($this->pdo_db->query("desc " . $table) as $row) {
                     $tdetail = array();
@@ -265,6 +268,7 @@ class Query_builderController extends BasicController {
 
         $this->view->db_table_json_info = json_encode($db_tables);
         $this->view->db_table_info = $db_tables;
+        $this->view->saved_header = $savedHeader;
 
         $_SESSION['db_tables'] = serialize($db_tables);
     }
@@ -276,19 +280,64 @@ class Query_builderController extends BasicController {
 
         if ($this->project_db !== null) {
             $this->project_db->close();
-           
+
             $this->set('engine', $this->project_db->engine);
             $this->set('host', $this->project_db->host);
             $this->set('port', $this->project_db->port);
             $this->set('user', $this->project_db->user);
             $this->set('password', $this->project_db->password);
-            if(!empty($_POST['db_name'])){
-                $this->set('dbname',$_POST['db_name']);
+            if (!empty($_POST['db_name'])) {
+                $this->set('dbname', $_POST['db_name']);
             }
-            
         } else {
             MLog::d("open project db fail!");
         }
+    }
+
+    public function create_definitions() {
+        $this->setLayout("ajax.phtml");
+
+        MLog::dExport($_POST);
+
+
+        $this->openPDOdb();
+
+        if ($this->pdo_db === null) {
+            throw new Exception("Open db fail");
+        }
+
+        $table = $_POST['create_definitions_table_name'];
+        $id = $_POST['create_definitions_id_column'];
+        $name = $_POST['create_definitions_text_column'];
+
+        try {
+            $selectColumns = " SELECT ";
+            $selectColumns .="{$id} id, {$name} name";
+            $queryBase = " FROM ";
+            $queryBase.="{$table} ";
+
+
+            $runQuery = $selectColumns . $queryBase;
+
+            //echo $runQuery."\n";
+
+            $stmt = $this->pdo_db->prepare($runQuery);
+            $stmt_rv = $stmt->execute();
+
+            if ($stmt_rv) {
+                $this->set('definition', $stmt->fetchAll());
+            } else {
+                MLog::e("some thing wrong");
+                $this->set('definition', null);
+            }
+        } catch (PDOException $x) {
+            $errorMessage = "database error: " . $x->getMessage();
+            MLog::e($errorMessage);
+            throw $x;
+        }
+
+        $this->set('header', $_POST['create_definitions_header']);
+        $this->set('tailer', $_POST['create_definitions_tailer']);
     }
 
     public function create_class() {
@@ -303,28 +352,18 @@ class Query_builderController extends BasicController {
 
         $this->view->db_table_info = unserialize($_SESSION['db_tables']);
 
-        $this->openProjectDb();
+        MLog::dExport($_POST);
 
-        if ($this->project_db !== null) {
-
-            $globalSetting = $this->project_db->get('global_setting');
-
-            if ($globalSetting === null) {
-                $globalSetting = array();
-            }
-
-            $globalSetting[$_POST['setting_name']] = $this->view->table_varialbe_map;
-
-            $this->project_db->set('global_setting', $globalSetting);
-
-            $this->project_db->close();
-        }
+        $this->saveGlobalSetting();
     }
 
     public function create_query() {
         $this->setLayout("ajax.phtml");
 
         $columns = json_decode($_POST['column_data'], true);
+
+        $this->set('custom_header_code', $_POST['setting_custom_header_code']);
+        $this->set('custom_tailer_code', $_POST['setting_custom_tailer_code']);
 
         $tableInfo = json_decode($_POST['table_info'], true);
         $lineIdTableArray = json_decode($_POST['line_id_table_array'], true);
@@ -404,8 +443,8 @@ class Query_builderController extends BasicController {
         foreach ($oderBy as &$one) {
             if ($one['type'] === 'variable') {
                 $variables[$one['variable']] = 1;
-                $descVairalbeName='ordery_by_' . $one['variable'] . '_is_desc';
-                $one['desc_variable']=$descVairalbeName;
+                $descVairalbeName = 'ordery_by_' . $one['variable'] . '_is_desc';
+                $one['desc_variable'] = $descVairalbeName;
                 $variables[$descVairalbeName] = 1;
             } else {
                 $column = $uidColumnMap[$one['column_id']];
@@ -448,6 +487,8 @@ class Query_builderController extends BasicController {
 
         $columns = json_decode($_POST['column_data'], true);
 
+        $this->set('custom_header_code', $_POST['setting_custom_header_code']);
+        $this->set('custom_tailer_code', $_POST['setting_custom_tailer_code']);
 
         $lineIdTableArray = json_decode($_POST['line_id_table_array'], true);
         $uidColumnMap = json_decode($_POST['uid_column_map'], true);
@@ -543,6 +584,8 @@ class Query_builderController extends BasicController {
     public function create_delete() {
         $this->setLayout("ajax.phtml");
 
+        $this->set('custom_header_code', $_POST['setting_custom_header_code']);
+        $this->set('custom_tailer_code', $_POST['setting_custom_tailer_code']);
 
 
         $lineIdTableArray = json_decode($_POST['line_id_table_array'], true);
@@ -620,6 +663,8 @@ class Query_builderController extends BasicController {
         $this->setLayout("ajax.phtml");
 
         $columns = json_decode($_POST['column_data'], true);
+        $this->set('custom_header_code', $_POST['setting_custom_header_code']);
+        $this->set('custom_tailer_code', $_POST['setting_custom_tailer_code']);
 
 
         $lineIdTableArray = json_decode($_POST['line_id_table_array'], true);
@@ -700,15 +745,14 @@ class Query_builderController extends BasicController {
 
         $this->set('variables', array_keys($variables));
 
-        if(!empty($_POST['insert_return_last_id'])){
-             $this->set('return_last_id', true);
-        }
-        else{
-             $this->set('return_last_id', false);
+        if (!empty($_POST['insert_return_last_id'])) {
+            $this->set('return_last_id', true);
+        } else {
+            $this->set('return_last_id', false);
         }
 
-        //MLog::dExport($_POST);
-        MLog::dExport($columns, 'columns');
+        MLog::dExport($_POST);
+//        MLog::dExport($columns, 'columns');
 //        MLog::dExport($tableInfo, '$tableInfo');
 //        MLog::dExport($lineIdTableArray, '$uidTableMap');
 //        MLog::dExport($lineIdAliasMap, '$lineIdAliasMap');
@@ -729,6 +773,9 @@ class Query_builderController extends BasicController {
         if ($name === null) {
             $re['result'] = 'false';
             $re['error_message'] = "no name gaven";
+        } else if ($sub_name === null) {
+            $re['result'] = 'false';
+            $re['error_message'] = "no sub name gaven";
         } else {
             $this->openProjectDb();
 
@@ -736,22 +783,27 @@ class Query_builderController extends BasicController {
                 $re['result'] = 'false';
                 $re['error_message'] = "no project db";
             } else {
-                $nv = $this->project_db->get($name);
+                $key = $name . '_' . $sub_name;
+                $nv = $this->project_db->get($key);
                 if ($nv === null) {
                     $re['result'] = 'nodata';
                 } else {
 
-                    if ($sub_name === null) {
-                        $re['result'] = 'success';
-                        $re['data'] = $nv;
-                    } else {
-                        if (isset($nv[$sub_name])) {
-                            $re['result'] = 'success';
-                            $re['data'] = $nv[$sub_name];
-                        } else {
-                            $re['result'] = 'nosubdata';
-                        }
+                    $re['result'] = 'success';
+
+                    $data = array('' => '');
+                    
+                    if (isset($nv['setting_custom_tailer_code'])) {
+                        $data['setting_custom_tailer_code'] = $nv['setting_custom_tailer_code'];
                     }
+                    if (isset($nv['setting_custom_header_code'])) {
+                        $data['setting_custom_header_code'] = $nv['setting_custom_header_code'];
+                    }
+                    if (isset($nv['table_variable_map'])) {
+                        $data['table_variable_map'] = $nv['table_variable_map'];
+                    }
+
+                    $re['data'] = $data;
                 }
             }
         }
@@ -860,6 +912,40 @@ class Query_builderController extends BasicController {
             } else {
                 return "{$tableAlias}.{$columnInfo['name']}";
             }
+        }
+    }
+
+    protected function saveGlobalSetting() {
+
+        if (empty($_POST['setting_name'])) {
+            return;
+        }
+        if (empty($_POST['saved_header'])) {
+            return;
+        }
+        $globalKey = $_POST['setting_name'] . $_POST['saved_header'] . "_global_setting";
+
+        $this->openProjectDb();
+        if ($this->project_db !== null) {
+
+
+
+            $globalSetting = $this->project_db->get($globalKey);
+
+            if ($globalSetting === null) {
+                $globalSetting = array();
+            }
+
+            $globalSetting['table_variable_map'] = json_decode($_POST['tab_var_map'], true);
+
+            $globalSetting['setting_custom_header_code'] = $_POST['setting_custom_header_code'];
+            $globalSetting['setting_custom_tailer_code'] = $_POST['setting_custom_tailer_code'];
+
+
+
+            $this->project_db->set($globalKey, $globalSetting);
+
+            $this->project_db->close();
         }
     }
 

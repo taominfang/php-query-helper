@@ -1,0 +1,5 @@
+<?if(empty($this->definition)):?>
+There is no data
+<?else: foreach($this->definition as $one):?>
+const <?=$this->header?><?=  strtoupper(str_replace(' ', '_', $one['name']))?><?=$this->tailer?>=<?=$one['id']?>;
+<?endforeach; endif; ?>

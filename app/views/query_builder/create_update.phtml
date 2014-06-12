@@ -4,6 +4,7 @@ foreach ($this->variables as $one) {
     echo ', $' . $one;
 }
 ?>){
+<?=$this->custom_header_code;?>
 
 try {
 
@@ -97,4 +98,6 @@ catch ( PDOException $x ) {
 //$errorMessage="database error: " . $x->getMessage();
 throw $x;
 }
+<?=$this->custom_tailer_code;?>
+
 }

@@ -5,6 +5,8 @@ foreach ($this->variables as $one) {
 }
 ?><? if ($this->pagination_function_enable): ?>,$pageNo,$pageSize<? endif ?>){
 
+<?=$this->custom_header_code;?>
+
 try {
 $selectColumns =" SELECT ";
 <?
@@ -184,4 +186,5 @@ catch ( PDOException $x ) {
 //$errorMessage="database error: " . $x->getMessage();
 throw $x;
 }
+<?=$this->custom_tailer_code;?>
 }
