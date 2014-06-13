@@ -372,6 +372,11 @@ class Query_builderController extends BasicController {
         $lineIdLogicMap = json_decode($_POST['line_id_logic_map'], true);
         $table_varialbe_map = json_decode($_POST['tab_var_map'], true);
 
+        if (!empty($_POST['query_return_first_row'])) {
+            $this->set('query_return_first_row', true);
+        } else {
+            $this->set('query_return_first_row', false);
+        }
 
         $oderBy = json_decode($_POST['order_by_columns'], true);
 
@@ -480,6 +485,8 @@ class Query_builderController extends BasicController {
 //        MLog::dExport($uidColumnMap, '$uidColumnMap');
 //        MLog::dExport($variables, '$variables');
         MLog::dExport($oderBy, '$oderBy');
+
+        $this->saveGlobalSetting();
     }
 
     public function create_update() {
@@ -579,6 +586,7 @@ class Query_builderController extends BasicController {
 //        MLog::dExport($lineIdLogicMap, '$lineIdLogicMap');
 //        MLog::dExport($uidColumnMap, '$uidColumnMap');
 //        MLog::dExport($variables, '$variables');
+        $this->saveGlobalSetting();
     }
 
     public function create_delete() {
@@ -657,6 +665,7 @@ class Query_builderController extends BasicController {
 //        MLog::dExport($lineIdLogicMap, '$lineIdLogicMap');
 //        MLog::dExport($uidColumnMap, '$uidColumnMap');
 //        MLog::dExport($variables, '$variables');
+        $this->saveGlobalSetting();
     }
 
     public function create_insert() {
@@ -760,6 +769,7 @@ class Query_builderController extends BasicController {
 //        MLog::dExport($lineIdLogicMap, '$lineIdLogicMap');
 //        MLog::dExport($uidColumnMap, '$uidColumnMap');
 //        MLog::dExport($variables, '$variables');
+        $this->saveGlobalSetting();
     }
 
     public function load_setting() {
@@ -792,7 +802,7 @@ class Query_builderController extends BasicController {
                     $re['result'] = 'success';
 
                     $data = array('' => '');
-                    
+
                     if (isset($nv['setting_custom_tailer_code'])) {
                         $data['setting_custom_tailer_code'] = $nv['setting_custom_tailer_code'];
                     }
@@ -908,9 +918,9 @@ class Query_builderController extends BasicController {
             $tableAlias = $lineIdAliasMap[$lineId];
 
             if (empty($tableAlias)) {
-                return $columnInfo['name'];
+                return "`{$columnInfo['name']}`";
             } else {
-                return "{$tableAlias}.{$columnInfo['name']}";
+                return "{$tableAlias}.`{$columnInfo['name']}`";
             }
         }
     }
@@ -940,7 +950,8 @@ class Query_builderController extends BasicController {
 
             $globalSetting['setting_custom_header_code'] = $_POST['setting_custom_header_code'];
             $globalSetting['setting_custom_tailer_code'] = $_POST['setting_custom_tailer_code'];
-
+            $globalSetting['setting_error_log_function_name'] = $_POST['setting_error_log_function_name'];
+            $this->set('error_log', $_POST['setting_error_log_function_name']);
 
 
             $this->project_db->set($globalKey, $globalSetting);

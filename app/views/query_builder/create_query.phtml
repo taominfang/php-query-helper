@@ -5,8 +5,9 @@ foreach ($this->variables as $one) {
 }
 ?><? if ($this->pagination_function_enable): ?>,$pageNo,$pageSize<? endif ?>){
 
-<?=$this->custom_header_code;?>
+<?= $this->custom_header_code; ?>
 
+$runQuery="no query yet";
 try {
 $selectColumns =" SELECT ";
 <?
@@ -18,16 +19,16 @@ foreach ($this->columns as $ind => $one) {
 
     if (empty($one['table_alias'])) {
         if ($this->table_size === 1) {
-            $columnName = $one['column_name'];
+            $columnName = "`{$one['column_name']}`";
         } else {
-            $columnName = '{$this->' . $one['table_varialbe'] . '}.' . $one['column_name'];
+            $columnName = '{$this->' . $one['table_varialbe'] . '}.`' . $one['column_name'] . "`";
         }
     } else {
-        $columnName = "{$one['table_alias']}.{$one['column_name']}";
+        $columnName = "{$one['table_alias']}.`{$one['column_name']}`";
     }
 
     $aliasName = $one['alias_name'];
-    echo "{$columnName} {$aliasName}\";\n";
+    echo "{$columnName} `{$aliasName}`\";\n";
 }
 ?>
 $queryBase=" FROM ";
@@ -71,12 +72,12 @@ if (!empty($this->order_by)) {
         if ($one['type'] === 'fixed') {
             if (empty($one['table_alias'])) {
                 if ($this->table_size === 1) {
-                    $columnName = $one['column_name'];
+                    $columnName = "`{$one['column_name']}`";
                 } else {
-                    $columnName = '{$this->' . $one['table_varialbe'] . '}.' . $one['column_name'];
+                    $columnName = '{$this->' . $one['table_varialbe'] . '}.' . "`{$one['column_name']}`";
                 }
             } else {
-                $columnName = "{$one['table_alias']}.{$one['column_name']}";
+                $columnName = "{$one['table_alias']}.`{$one['column_name']}`";
             }
             echo '$order_clause.="' . $columnName . "\";\n";
 
@@ -114,7 +115,8 @@ foreach ($this->variables as $one) {
 ?>
 
 <? if ($this->pagination_function_enable): ?>
-    $stmt = $dbh->prepare("SELECT count(*) total ".$queryBase);
+    $runQuery="SELECT count(*) total ".$queryBase;
+    $stmt = $dbh->prepare($runQuery);
 
     $stmt_rv = $stmt->execute($bind_arr);
 
@@ -150,19 +152,30 @@ foreach ($this->variables as $one) {
     }
     else{
     $from=$pageNo*$pageSize;
-    $stmt2= $dbh->prepare($selectColumns. $queryBase.$order_clause." limit {$from},{$pageSize}");
+    $runQuery=$selectColumns. $queryBase.$order_clause." limit {$from},{$pageSize}";
+    $stmt2= $dbh->prepare($runQuery);
     $stmt_rv2 = $stmt2->execute($bind_arr);
     if($stmt_rv2){
     $re['data']=$stmt2->fetchAll();
     $re['fetch_size']=$stmt2->rowCount();
     }
     else{
+    <? if (!empty($this->error_log)): ?>
+        <?= $this->error_log ?>('db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery);
+    <? else: ?>
+        //$errorMessage='db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery;
+    <? endif ?>
     $re['data']=false;
     }
     }
     return $re;
     }
     else {
+    <? if (!empty($this->error_log)): ?>
+        <?= $this->error_log ?>('db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery);
+    <? else: ?>
+        //$errorMessage='db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery;
+    <? endif ?>
     return false;
     }
 <? else: ?>
@@ -175,16 +188,37 @@ foreach ($this->variables as $one) {
     $stmt_rv = $stmt->execute($bind_arr);
 
     if ($stmt_rv) {
-    return $stmt->fetchAll();
+    <? if ($this->query_return_first_row): ?>
+        $re=$stmt->fetchAll();
+        if(isset($re[0])){
+        return $re[0];
+        }
+        else {
+        return false;
+        }
+    <? else: ?>
+        return $stmt->fetchAll();
+    <? endif ?>
     }
     else {
+    <? if (!empty($this->error_log)): ?>
+        <?= $this->error_log ?>('db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery);
+    <? else: ?>
+        //$errorMessage='db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery;
+    <? endif ?>
+
     return false;
     }
 <? endif ?>
 }
 catch ( PDOException $x ) {
-//$errorMessage="database error: " . $x->getMessage();
+<? if (!empty($this->error_log)): ?>
+    <?= $this->error_log ?>('db error info:' . $x->getMessage()." query:".$runQuery);
+<? else: ?>
+    //$errorMessage='db error info:' . $x->getMessage()." query:".$runQuery;
+<? endif ?>
+
 throw $x;
 }
-<?=$this->custom_tailer_code;?>
+<?= $this->custom_tailer_code; ?>
 }

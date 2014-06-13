@@ -890,15 +890,15 @@
 
 
             if (typeof setting['data'] !== 'undefined') {
-                var data=setting['data'];
+                var data = setting['data'];
                 if (typeof data['table_variable_map'] !== 'undefined') {
                     var ss = setting['data']['table_variable_map'];
                     for (var ind in ss) {
                         var vid = ss[ind]['tvm_id'];
                         var vn = ss[ind]['varialbe'];
-                        var dbr=ss[ind]['db_name_required'];
+                        var dbr = ss[ind]['db_name_required'];
                         $('#' + vid + " .varialbe_name").val(vn);
-                        $('#' + vid + " .db_name_required").prop('checked',dbr);
+                        $('#' + vid + " .db_name_required").prop('checked', dbr);
 
                     }
                 }
@@ -908,6 +908,10 @@
                 }
                 if (typeof data['setting_custom_tailer_code'] !== 'undefined') {
                     $('#setting_custom_tailer_code').val(data['setting_custom_tailer_code']);
+                }
+
+                if (typeof data['setting_error_log_function_name'] !== 'undefined') {
+                    $('#setting_error_log_function_name').val(data['setting_error_log_function_name']);
                 }
 
 
@@ -958,6 +962,7 @@
         $('#' + formId + ' .setting_name').val($('#setting_name').val());
         $('#' + formId + ' .setting_custom_header_code').val($('#setting_custom_header_code').val());
         $('#' + formId + ' .setting_custom_tailer_code').val($('#setting_custom_tailer_code').val());
+        $('#' + formId + ' .setting_error_log_function_name').val($('#setting_error_log_function_name').val());
 
 
     }
@@ -1138,10 +1143,10 @@
 
 
         populateTableVariableMap();
+        collectionGlobalSetting('create_insert_form');
+
         $('#create_insert_form .tab_var_map').val(JSON.stringify(table_name_variale_map));
-        $('#create_insert_form .setting_name').val($('#setting_name').val());
-        $('#create_insert_form .setting_custom_header_code').val($('#setting_custom_header_code').val());
-        $('#create_insert_form .setting_custom_tailer_code').val($('#setting_custom_tailer_code').val());
+
         $('#create_insert_form .uid_column_map').val(JSON.stringify(query_cache_data.global_uid_column_map));
         $('#create_insert_form .line_id_table_array').val(JSON.stringify(query_cache_data.line_id_table_name_array));
         $('#create_insert_form .table_info').val(JSON.stringify(table_info));
@@ -1299,6 +1304,17 @@ Action:
                 </td>
             </tr>
 
+
+            <tr>
+                <td>
+                    <span>Error Log Function Name:</span>
+                </td>
+                <td>
+                    <input value="" id="setting_error_log_function_name" size="30">
+                </td>
+            </tr>
+
+
         </tbody>
     </table>
 
@@ -1338,11 +1354,10 @@ Action:
         <input class="setting_name" name="setting_name" value="" type="hidden">
         <input class="setting_custom_header_code" name="setting_custom_header_code" value="" type="hidden">
         <input class="setting_custom_tailer_code" name="setting_custom_tailer_code" value="" type="hidden">
+        <input class="setting_error_log_function_name" name="setting_error_log_function_name" value="" type="hidden">
 
         <input class="db_name" name="db_name" value="" type="hidden">
         <input class="saved_header" name="saved_header" value="<?= $this->saved_header ?>" type="hidden">
-        <input class="setting_custom_header_code" name="setting_custom_header_code" value="" type="hidden">
-        <input class="setting_custom_tailer_code" name="setting_custom_tailer_code" value="" type="hidden">
 
         <table>
             <tbody>
@@ -1467,6 +1482,7 @@ Action:
             <input class="setting_name" name="setting_name" value="" type="hidden">
             <input class="setting_custom_header_code" name="setting_custom_header_code" value="" type="hidden">
             <input class="setting_custom_tailer_code" name="setting_custom_tailer_code" value="" type="hidden">
+            <input class="setting_error_log_function_name" name="setting_error_log_function_name" value="" type="hidden">
             <input class="uid_column_map" name="uid_column_map" value="" type="hidden">
             <input class="column_data" name="column_data" value="" type="hidden">
             <input class="line_id_logic_map" name="line_id_logic_map" value="" type="hidden">
@@ -1478,9 +1494,13 @@ Action:
             <input class="table_info" name="table_info" value="" type="hidden">
             <span>Limit:</span> <span>From(0 base):</span><input class="query_limit_from" name="query_limit_from" value="" type="text">
             <span>Row Number:</span><input class="query_limit_row_number" name="query_limit_row_number" value="" type="text">
+
+            <br/>
             <br/>
             <span> Query Name:</span><input class="query_name" name="query_name" value="" type="text">
             <input type="checkbox" name='query_add_page_function'  value="1">Add Pagination Function
+
+            <input type="checkbox" name='query_return_first_row'  value="1">Return First Row from result
         </form>
         <button id="create_query_bt">Create Query</button>
     </div>
@@ -1493,6 +1513,7 @@ Action:
             <input class="setting_name" name="setting_name" value="" type="hidden">
             <input class="setting_custom_header_code" name="setting_custom_header_code" value="" type="hidden">
             <input class="setting_custom_tailer_code" name="setting_custom_tailer_code" value="" type="hidden">
+            <input class="setting_error_log_function_name" name="setting_error_log_function_name" value="" type="hidden">
             <input class="uid_column_map" name="uid_column_map" value="" type="hidden">
             <input class="column_data" name="column_data" value="" type="hidden">
             <input class="line_id_logic_map" name="line_id_logic_map" value="" type="hidden">
@@ -1515,6 +1536,7 @@ Action:
             <input class="setting_name" name="setting_name" value="" type="hidden">
             <input class="setting_custom_header_code" name="setting_custom_header_code" value="" type="hidden">
             <input class="setting_custom_tailer_code" name="setting_custom_tailer_code" value="" type="hidden">
+            <input class="setting_error_log_function_name" name="setting_error_log_function_name" value="" type="hidden">
             <input class="uid_column_map" name="uid_column_map" value="" type="hidden">
             <input class="column_data" name="column_data" value="" type="hidden">
             <input class="line_id_logic_map" name="line_id_logic_map" value="" type="hidden">
@@ -1539,6 +1561,7 @@ Action:
             <input class="setting_name" name="setting_name" value="" type="hidden">
             <input class="setting_custom_header_code" name="setting_custom_header_code" value="" type="hidden">
             <input class="setting_custom_tailer_code" name="setting_custom_tailer_code" value="" type="hidden">
+            <input class="setting_error_log_function_name" name="setting_error_log_function_name" value="" type="hidden">
             <input class="uid_column_map" name="uid_column_map" value="" type="hidden">
             <input class="column_data" name="column_data" value="" type="hidden">
             <input class="line_id_logic_map" name="line_id_logic_map" value="" type="hidden">
