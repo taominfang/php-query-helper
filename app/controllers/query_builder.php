@@ -406,9 +406,10 @@ class Query_builderController extends BasicController {
             if (!empty($lineIdLogicMap[$lineId])) {
                 $logic = $lineIdLogicMap[$lineId];
 
-                $logicStr = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
-                $oneFromTable['logic_string'] = $logicStr;
+                $logicStrs = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
+                $oneFromTable['logic_strings'] = $logicStrs;
                 $oneFromTable['join_type'] = $logic['join_type'];
+                MLog::dExport($lineIdLogicMap);
             }
 
             $fromTables[] = $oneFromTable;
@@ -531,8 +532,8 @@ class Query_builderController extends BasicController {
             if (!empty($lineIdLogicMap[$lineId])) {
                 $logic = $lineIdLogicMap[$lineId];
 
-                $logicStr = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
-                $oneFromTable['logic_string'] = $logicStr;
+                $logicStrs = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
+                $oneFromTable['logic_strings'] = $logicStrs;
                 $oneFromTable['join_type'] = $logic['join_type'];
             }
 
@@ -630,8 +631,8 @@ class Query_builderController extends BasicController {
             if (!empty($lineIdLogicMap[$lineId])) {
                 $logic = $lineIdLogicMap[$lineId];
 
-                $logicStr = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
-                $oneFromTable['logic_string'] = $logicStr;
+                $logicStrs = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
+                $oneFromTable['logic_strings'] = $logicStrs;
                 $oneFromTable['join_type'] = $logic['join_type'];
             }
 
@@ -710,8 +711,8 @@ class Query_builderController extends BasicController {
             if (!empty($lineIdLogicMap[$lineId])) {
                 $logic = $lineIdLogicMap[$lineId];
 
-                $logicStr = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
-                $oneFromTable['logic_string'] = $logicStr;
+                $logicStrs = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
+                $oneFromTable['logic_strings'] = $logicStrs;
                 $oneFromTable['join_type'] = $logic['join_type'];
             }
 
@@ -829,18 +830,19 @@ class Query_builderController extends BasicController {
         }
 
         if ($logic['connector'] === null && $logic['condition'] === null) {
-            return ' *** ??? *** ';
+            return array('" *** ??? *** "');
         }
 
         $re = null;
         if ($logic ['single']) {
             if ($logic['condition'] === null) {
-                return " ***???*** ";
+                return array('" ***???*** "');
             }
 
 
             $cond = $logic['condition'];
 
+            $re = array();
             $logicV = null;
 
             $leftV = $this->getShowText($cond['left_select'], $cond['left_value'], $columnIdInfoMap, $lineIdAliasMap, $variables);
@@ -857,59 +859,103 @@ class Query_builderController extends BasicController {
             }
 
 
-            if ($cond['left_select'] === 'variable_value') {
-                $leftV = ":" . $leftV;
-            }
-            if ($cond['right_select'] === 'variable_value') {
-                $rightV = ":" . $rightV;
-            }
-            if ($cond['extra_select'] === 'variable_value') {
-                $extraV = ":" . $extraV;
-            }
 
 
 
             if ($logicV === "IS NULL" || $logicV === 'IS NOT NULL') {
 
-                $re = $leftV . " " . $logicV;
+                $re[] = $this->transformByType($leftV,$cond['left_select']);
+                $re[] = "' '";
+                $re[] = $this->addQuote($logicV);
             } else if ($logicV === "BETWEEN") {
 
-                $re = $leftV . " " . $logicV . " " . $rightV . " AND " . $extraV;
+                $re[] = $this->transformByType($leftV,$cond['left_select']);
+                $re[] = "' '";
+                $re[] = $this->addQuote($logicV);
+                $re[] = $this->addQuote(' ');
+                $re[] = $this->transformByType($rightV,$cond['right_select']);
+                $re[] = $this->addQuote(' AND ');
+                $re[] = $re[] = $this->transformByType($extraV,$cond['extra_select']);
+            } else if ($logicV === "IN" || $logicV === 'NOT IN') {
+                $re[] = $this->transformByType($leftV,$cond['left_select']);
+                $re[] = "' '";
+                $re[] = $this->addQuote($logicV);
+                $re[] = $this->addQuote(' ');
+
+                $rights = explode(',', $rightV);
+                $re[] = $this->addQuote('( ');
+                foreach ($rights as $ind => $one) {
+                    if ($ind !== 0) {
+                        $re[] = $this->addQuote(',');
+                    }
+                    $re[] = $this->transformByType($one,$cond['right_select']);
+
+                }
+                $re[] = $this->addQuote(')');
             } else {
-                $re = $leftV . " " . $logicV . " " . $rightV;
+                $re[] = $this->transformByType($leftV,$cond['left_select']);
+                $re[] = "' '";
+                $re[] = $this->addQuote($logicV);
+                $re[] = $this->addQuote(' ');
+                $re[] = $this->transformByType($rightV,$cond['right_select']);
+
             }
         } else {
 
-            $re = "";
+            $re = array();
             $leftStr = $this->logic2String($logic['left'], $columnIdInfoMap, $lineIdAliasMap, $variables);
             $rightStr = $this->logic2String($logic['right'], $columnIdInfoMap, $lineIdAliasMap, $variables);
 
             if ($leftStr === null) {
-                $leftStr = "___ERROR_left_null___";
+                $leftStr = array("'___ERROR_left_null___'");
             }
             if ($rightStr === null) {
-                $leftStr = "___ERROR_right_null___";
+                $leftStr = array("'___ERROR_right_null___'");
             }
 
-            $re .= "( " . $leftStr . ") ";
+            $re[] = $this->addQuote('(');
+
+
+            $re=  array_merge($re, $leftStr);
+            $re[] = $this->addQuote(') ');
             if ($logic['connector'] === null) {
-                $re .= " ?AND/OR? ";
+                $re[] = $re[] = $this->addQuote(" ?AND/OR? ");
             } else {
-                $re .= $logic['connector'] . " ";
+                $re[] = $this->addQuote($logic['connector']);
+                ;
             }
-            $re .= "( " . $rightStr . " )";
+            $re[] = $this->addQuote(' (');
+            $re=  array_merge($re, $rightStr);
+
+            $re[] = $this->addQuote(')');
         }
+
+        MLog::dExport($re);
         return $re;
+    }
+
+    protected function addQuote($s) {
+        return '\'' . $s . '\'';
+    }
+
+    protected function transformByType($v,$type){
+
+        if($type ==='in_program_definitions'){
+            return $v;
+        }
+        else{
+            return $this->addQuote($v);
+        }
     }
 
     protected function getShowText($sel, $v, $columnIdInfoMap, $lineIdAliasMap, &$variables) {
         if ($v === '') {
-            return "???";
+            return '???';
         }
-        if ($sel === "variable_value" || $sel === 'custom_value') {
-            if ($sel === "variable_value") {
-                $variables[$v] = 1;
-            }
+        if ($sel === "variable_value") {
+            $variables[$v] = 1;
+            return ':' . $v;
+        } else if ($sel === 'custom_value' || $sel === 'in_program_definitions') {
             return $v;
         } else {
 

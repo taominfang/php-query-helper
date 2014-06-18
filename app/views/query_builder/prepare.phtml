@@ -1212,7 +1212,7 @@
             var d = {};
             var s = query_cache_data.line_id_logic_map[id];
 
-            d.logic_type = s.logic_type;
+            d.join_type = s.join_type;
             d.logic_data = tmp.removeCircularStructureFromNod(tmp.createLogicNode(null, 0, s.logic_data));
             re[id] = d;
         }

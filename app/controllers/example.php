@@ -16,7 +16,7 @@ class ExampleController extends BasicController {
         $this->set('exa1', 'hello');
         $this->view->exa2 = array('world', ' .');
 
-        $this->view->addInternalJs("logic_edit.js");
+        $this->view->addInternalJs("logic_edit_debug.js");
         $this->view->addInternalCss("logic_edit.css");
     }
 

@@ -32,7 +32,11 @@ $bind_arr = array();
 <?
 
 if (!empty($this->where_claus)) {
-    echo '$runQuery.=" ' . "WHERE {$this->where_claus}\";\n";
+    echo '$runQuery.=" ' . 'WHERE " ';
+    foreach ($this->where_claus as $one) {
+        echo "." . $one;
+    }
+    echo ";\n";
 }
 ?>
 

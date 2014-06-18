@@ -1,24 +1,24 @@
 <script type="text/javascript" >
     $(document).ready(function() {
-        var options = [];
-        options.push({
-            uuid: 'adsadfasdf1',
-            column: {cname:'option1',talias:'tt'}
-        });
-        options.push({
-            uuid: 'adsadfasdf2',
-            column: {cname:'option2',talias:'tt'}
-        });
-        options.push({
-            uuid: 'adsadfasdf3',
-            column: {cname:'option3',talias:'dd'}
-        });
-        var cc = new QueryLogic("logics", null, options);
 
-        cc.logic_view_rendering();
 
-        $('#try_me').click(function(){
-            $('#result').val(cc.toConditionStr());
+        $('#try_me').click(function() {
+            var options = [];
+            options.push({
+                uuid: 'adsadfasdf1',
+                column: {cname: 'option1', talias: 'tt'}
+            });
+            options.push({
+                uuid: 'adsadfasdf2',
+                column: {cname: 'option2', talias: 'tt'}
+            });
+            options.push({
+                uuid: 'adsadfasdf3',
+                column: {cname: 'option3', talias: 'dd'}
+            });
+            var cc = new QueryLogic("logics", null, options);
+
+            cc.logic_view_rendering();
         });
     });
 </script>

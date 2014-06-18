@@ -88,7 +88,8 @@ function QueryLogic(div_id, initData, conditionOptions) {
 
 
 
-    $('#logic_edit_dialog_convert_bt').unbind('click');
+    that=this;
+    $('#logic_edit_dialog_cleft_bt').unbind('click');
     $('#logic_edit_dialog_cleft_bt').click(function() {
 
         that.convert2ChildNode(true);

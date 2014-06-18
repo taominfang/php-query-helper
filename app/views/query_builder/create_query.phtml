@@ -41,19 +41,26 @@ foreach ($this->frome_tables as $one) {
     echo '{' . $one['table_variable'] . '}';
 
     if (!empty($one['table_alias'])) {
-        echo " as {$one['table_alias']}";
+        echo " as {$one['table_alias']} ";
     }
-
-    if (!empty($one['logic_string'])) {
-        echo " on {$one['logic_string']}";
-    }
-
     echo "\";\n";
+    if (!empty($one['logic_strings'])) {
+        echo '$queryBase.=" on "';
+        foreach ($one['logic_strings'] as $one) {
+            echo "." . $one;
+        }
+
+        echo ";\n";
+    }
 }
 
 
 if (!empty($this->where_claus)) {
-    echo '$queryBase.=" ' . "WHERE {$this->where_claus}\";\n";
+    echo '$queryBase.=" ' . 'WHERE " ';
+    foreach ($this->where_claus as $one) {
+        echo "." . $one;
+    }
+    echo ";\n";
 }
 ?>
 
