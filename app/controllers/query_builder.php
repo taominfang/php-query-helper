@@ -813,6 +813,12 @@ class Query_builderController extends BasicController {
                     if (isset($nv['table_variable_map'])) {
                         $data['table_variable_map'] = $nv['table_variable_map'];
                     }
+                   if (isset($nv['setting_error_log_function_name'])) {
+                        $data['setting_error_log_function_name'] = $nv['setting_error_log_function_name'];
+                    }
+
+
+
 
                     $re['data'] = $data;
                 }
@@ -864,20 +870,20 @@ class Query_builderController extends BasicController {
 
             if ($logicV === "IS NULL" || $logicV === 'IS NOT NULL') {
 
-                $re[] = $this->transformByType($leftV,$cond['left_select']);
+                $re[] = $this->transformByType($leftV, $cond['left_select']);
                 $re[] = "' '";
                 $re[] = $this->addQuote($logicV);
             } else if ($logicV === "BETWEEN") {
 
-                $re[] = $this->transformByType($leftV,$cond['left_select']);
+                $re[] = $this->transformByType($leftV, $cond['left_select']);
                 $re[] = "' '";
                 $re[] = $this->addQuote($logicV);
                 $re[] = $this->addQuote(' ');
-                $re[] = $this->transformByType($rightV,$cond['right_select']);
+                $re[] = $this->transformByType($rightV, $cond['right_select']);
                 $re[] = $this->addQuote(' AND ');
-                $re[] = $re[] = $this->transformByType($extraV,$cond['extra_select']);
+                $re[] = $re[] = $this->transformByType($extraV, $cond['extra_select']);
             } else if ($logicV === "IN" || $logicV === 'NOT IN') {
-                $re[] = $this->transformByType($leftV,$cond['left_select']);
+                $re[] = $this->transformByType($leftV, $cond['left_select']);
                 $re[] = "' '";
                 $re[] = $this->addQuote($logicV);
                 $re[] = $this->addQuote(' ');
@@ -888,17 +894,15 @@ class Query_builderController extends BasicController {
                     if ($ind !== 0) {
                         $re[] = $this->addQuote(',');
                     }
-                    $re[] = $this->transformByType($one,$cond['right_select']);
-
+                    $re[] = $this->transformByType($one, $cond['right_select']);
                 }
                 $re[] = $this->addQuote(')');
             } else {
-                $re[] = $this->transformByType($leftV,$cond['left_select']);
+                $re[] = $this->transformByType($leftV, $cond['left_select']);
                 $re[] = "' '";
                 $re[] = $this->addQuote($logicV);
                 $re[] = $this->addQuote(' ');
-                $re[] = $this->transformByType($rightV,$cond['right_select']);
-
+                $re[] = $this->transformByType($rightV, $cond['right_select']);
             }
         } else {
 
@@ -916,7 +920,7 @@ class Query_builderController extends BasicController {
             $re[] = $this->addQuote('(');
 
 
-            $re=  array_merge($re, $leftStr);
+            $re = array_merge($re, $leftStr);
             $re[] = $this->addQuote(') ');
             if ($logic['connector'] === null) {
                 $re[] = $re[] = $this->addQuote(" ?AND/OR? ");
@@ -925,25 +929,94 @@ class Query_builderController extends BasicController {
                 ;
             }
             $re[] = $this->addQuote(' (');
-            $re=  array_merge($re, $rightStr);
+            $re = array_merge($re, $rightStr);
 
             $re[] = $this->addQuote(')');
         }
 
+        $re = $this->combineStringArray($re);
         MLog::dExport($re);
         return $re;
+    }
+
+    protected function combineStrings($str1, $str2) {
+        $sLen1 = strlen($str1);
+        $sLen2 = strlen($str2);
+
+        $re=false;
+        if ($sLen1 > 1 && $sLen2 > 1 && substr($str1, 0, 1) === "'" && substr($str2, 0, 1) === "'" && substr($str1, $sLen1 - 1) === "'" && substr($str2, $sLen2 - 1) === "'") {
+            $re= substr($str1, 0, $sLen1 - 1) . substr($str2, 1);
+        }
+
+        if($re!==false){
+            MLog::d("[{$str1}] + [{$str2}] = [{$re}]");
+        }
+        else{
+            MLog::d("[{$str1}]  [{$str2}] can not combine!");
+
+        }
+        return $re;
+    }
+
+    protected function combineStringArray($input) {
+        if (empty($input)) {
+            return $input;
+        }
+
+        $total = count($input);
+
+        if ($total === 1) {
+            return $input;
+        }
+
+        $newArray = array();
+        $buffed = $input[0];
+        for ($ind = 1;;) {
+            if(isset($input[$ind])){
+                $newS=  $this->combineStrings($buffed, $input[$ind]);
+                if($newS === false){
+                    //can not combine
+                    $newArray[]=$buffed;
+                    $newArray[]=$input[$ind];
+
+                    $ind++;
+
+                    if(isset($input[$ind])){
+                        $buffed=$input[$ind];
+                    }
+                    else{
+                        $buffed=null;
+                        break;
+                    }
+
+
+                }
+                else{
+                    $buffed=$newS;
+                }
+                $ind++;
+            }
+            else{
+                if($buffed !== null){
+                    $newArray[]=$buffed;
+                }
+                break;
+            }
+
+        }
+
+        return $newArray;
     }
 
     protected function addQuote($s) {
         return '\'' . $s . '\'';
     }
 
-    protected function transformByType($v,$type){
+    protected function transformByType($v, $type) {
 
-        if($type ==='in_program_definitions'){
+        if ($type === 'in_program_definitions') {
             return $v;
-        }
-        else{
+        } else {
             return $this->addQuote($v);
         }
     }

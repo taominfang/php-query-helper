@@ -483,12 +483,12 @@
 
 
 
-            var input = "= <input type='text' id='column_value_" + one + "' value=''>";
+            var input = "= <input type='text' id='column_value_" + one + "' value='" + getVariableName(text) + "'>";
 
             html += input;
 
-            html += "<input type='radio' name='column_value_type_" + one + "' value='pure' checked='checked'> Pure Value";
-            html += "<input type='radio' name='column_value_type_" + one + "' value='variable' > Variable ";
+            html += "<input type='radio' name='column_value_type_" + one + "' value='pure' > Pure Value";
+            html += "<input type='radio' name='column_value_type_" + one + "' value='variable' checked='checked'> Variable ";
             html += "<input type='radio' name='column_value_type_" + one + "' value='function'> Internal Function ";
             html += "<span>,</span>";
 
@@ -613,6 +613,8 @@
 
     var table_info = {};
 
+    var table_number = 0;
+
 
     var used_alias = {};
 
@@ -621,7 +623,7 @@
     function prepareTablesInfo() {
 
         var tab_select_options = "<option value='NONE'>Please Select a Table</option>";
-
+        table_number = 0;
         for (var db in db_table_info) {
             var tt = db_table_info[db];
             for (var tn in tt) {
@@ -634,7 +636,7 @@
                     db: db,
                     name: tn
                 };
-
+                table_number++;
 
                 tab_select_options += "<option value='" + tabFullName + "'>" + tabFullName + "</option>";
             }
@@ -701,11 +703,17 @@
                 alias = used_alias_table_map[tn];
             }
             else {
-                alias = table_info[tn].alias;
 
-                if (typeof used_alias[alias] !== 'undefined') {
-                    alias += alias + alias_counter;
-                    alias_counter++;
+                if (table_number === 1) {
+                    alias = '';
+                }
+                else {
+                    alias = table_info[tn].alias;
+
+                    if (typeof used_alias[alias] !== 'undefined') {
+                        alias += alias + alias_counter;
+                        alias_counter++;
+                    }
                 }
                 used_alias[alias] = 1;
             }
