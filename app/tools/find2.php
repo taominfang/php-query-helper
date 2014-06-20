@@ -1,12 +1,10 @@
 <?php
 
-include_once '/Users/mtao60/phplib/predis/examples/SharedConfigurations.php';
 
 
 define('__PRJ_HEADER__', '_FILE_MODIFY__');
 
-$f = new finder();
-$f->main($single_server, $argv);
+
 
 class fileDB {
 
@@ -60,7 +58,7 @@ class finder {
     private $timestamp;
     private $prefix;
 
-    function main($single_server, $argv) {
+    function main( $argv) {
 
 
         echo PHP_EOL;
@@ -68,18 +66,16 @@ class finder {
 
 
 
-
-
         if (empty($argv[1]) || empty($argv[2])) {
             $this->usage($argv, "Need Parameters");
-            return;
+            return false;
         }
 
         if (!is_dir($argv[1])) {
 
             $this->usage($argv, "error: {$argv[1]} is not a folder");
-            return;
-            return;
+            return false;
+         
         }
 
 
@@ -99,6 +95,8 @@ class finder {
         var_dump($this->result);
         echo "done\n";
         $this->file_db->save();
+        
+        return $this->result;
     }
 
     function scan($root, $dir) {
