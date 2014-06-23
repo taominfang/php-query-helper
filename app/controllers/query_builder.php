@@ -937,7 +937,7 @@ class Query_builderController extends BasicController {
         }
 
         $re = $this->combineStringArray($re);
-        MLog::dExport($re);
+      
         return $re;
     }
 
@@ -950,11 +950,7 @@ class Query_builderController extends BasicController {
             $re = substr($str1, 0, $sLen1 - 1) . substr($str2, 1);
         }
 
-        if ($re !== false) {
-            MLog::d("[{$str1}] + [{$str2}] = [{$re}]");
-        } else {
-            MLog::d("[{$str1}]  [{$str2}] can not combine!");
-        }
+        
         return $re;
     }
 
