@@ -530,7 +530,7 @@
             html += "<input type='radio' name='column_value_type_" + one + "' value='variable' checked='checked'> Variable ";
             html += "<input type='radio' name='column_value_type_" + one + "' value='function'> Internal Function ";
             html += "<span>,</span>";
-
+            html += "<input type='checkbox' name='column_value_is_unique_" + one + "' value='1'> Is Uniqu Index ";
             html += "</div>";
         }
 
@@ -1167,8 +1167,11 @@
             if ($(this).attr('type') === 'text') {
                 id = $(this).attr('id').replace(/column_value_/g, '');
             }
-            else {
+            else if ($(this).attr('type') === 'radio') {
                 id = $(this).attr('name').replace(/column_value_type_/g, '');
+            }
+            else if ($(this).attr('type') === 'checkbox') {
+                id = $(this).attr('name').replace(/column_value_is_unique_/g, '');
             }
 
             if (typeof columns[id] === 'undefined') {
@@ -1183,7 +1186,9 @@
                     columns[id]['type'] = $(this).val();
                 }
             }
-
+            else if ($(this).attr('type') === 'checkbox' && $(this).prop('checked')) {
+               columns[id]['is_unique_index'] =1;
+            }
 
 
         });
@@ -1331,24 +1336,24 @@ Action:
         <caption>Table name variables</caption>
         <tbody id="table_name_variables">
             <? foreach ($this->db_table_info as $db => $tables): ?>
-                <? foreach ($tables as $tableName => $tmp1): ?>
-                    <tr id="tvm_<?= $db ?>_<?= $tableName ?>">
-                        <td >
-                            <?= $db ?>.<?= $tableName ?>
-                            <input type="hidden" value="<?= $db ?>" class="db_name">
-                            <input type="hidden" value="<?= $tableName ?>" class="table_name">
-                            <input type="hidden" value="tvm_<?= $db ?>_<?= $tableName ?>" class="tvm_id">
-                        </td>
-                        <td>
-                            <input value="<?= strtoupper($db) ?>_<?= strtoupper($tableName) ?>" size="100" class="varialbe_name">
-                        </td>
+            <? foreach ($tables as $tableName => $tmp1): ?>
+            <tr id="tvm_<?= $db ?>_<?= $tableName ?>">
+                <td >
+                    <?= $db ?>.<?= $tableName ?>
+                    <input type="hidden" value="<?= $db ?>" class="db_name">
+                    <input type="hidden" value="<?= $tableName ?>" class="table_name">
+                    <input type="hidden" value="tvm_<?= $db ?>_<?= $tableName ?>" class="tvm_id">
+                </td>
+                <td>
+                    <input value="<?= strtoupper($db) ?>_<?= strtoupper($tableName) ?>" size="100" class="varialbe_name">
+                </td>
 
-                        <td>
-                            <input value="1" type="checkbox" class="db_name_required" checked="checked"> required DB name
-                        </td>
-                    </tr>
+                <td>
+                    <input value="1" type="checkbox" class="db_name_required" checked="checked"> required DB name
+                </td>
+            </tr>
 
-                <? endforeach; ?>
+            <? endforeach; ?>
             <? endforeach; ?>
         </tbody>
     </table>
@@ -1554,7 +1559,8 @@ Action:
             <input class="saved_header" name="saved_header" value="<?= $this->saved_header ?>" type="hidden">
 
             Insert Function Name:<input class="insert_name" name="insert_name" value="" type="text">
-            <input type="checkbox" name='insert_return_last_id'  value="1">Return Last ID
+            <input type="checkbox" name='insert_return_last_id'  checked="checked" value="1">Return Last ID
+            <input type="checkbox" name='insert_update_method'   value="1">Insert .. on duplicate update method
         </form>
         <button id="create_insert_bt">Create Insert</button>
     </div>
@@ -1595,13 +1601,13 @@ Action:
             $tableName = "ERROR! can not get table name !!!!";
             $tableDetail = null;
             foreach ($this->db_table_info as $db => $tables) {
-                foreach ($tables as $tn => $td) {
+            foreach ($tables as $tn => $td) {
 
-                    $tableName = "`{$db}`.`{$tn}`";
-                    $tableDetail = $td;
-                    break;
-                }
-                break;
+            $tableName = "`{$db}`.`{$tn}`";
+            $tableDetail = $td;
+            break;
+            }
+            break;
             }
             ?>
             TABLE:<span id="create_definitions_table_name_span">
@@ -1611,24 +1617,24 @@ Action:
             DEFINITION COLUMN:<select name='create_definitions_id_column'>
                 <?
                 if ($tableDetail !== null) :
-                    foreach ($tableDetail as $one):
-                        ?>
+                foreach ($tableDetail as $one):
+                ?>
 
-                        <option value="<?= $one['name'] ?>"><?= $one['name'] ?></option>
-                        <?
-                    endforeach;
+                <option value="<?= $one['name'] ?>"><?= $one['name'] ?></option>
+                <?
+                endforeach;
                 endif;
                 ?>
             </select><br/>
             STATIC VALUE COLUMN:<select name='create_definitions_text_column'>
                 <?
                 if ($tableDetail !== null) :
-                    foreach ($tableDetail as $one):
-                        ?>
+                foreach ($tableDetail as $one):
+                ?>
 
-                        <option value="<?= $one['name'] ?>"><?= $one['name'] ?></option>
-                        <?
-                    endforeach;
+                <option value="<?= $one['name'] ?>"><?= $one['name'] ?></option>
+                <?
+                endforeach;
                 endif;
                 ?>
             </select><br/>

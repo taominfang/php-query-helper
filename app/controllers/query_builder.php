@@ -314,7 +314,7 @@ class Query_builderController extends BasicController {
             $selectColumns = " SELECT ";
             $selectColumns .="{$id} id, {$name} name";
             $queryBase = " FROM ";
-            $queryBase.="{$table} ";
+            $queryBase.="{$table} order by {$id}";
 
 
             $runQuery = $selectColumns . $queryBase;
@@ -742,7 +742,9 @@ class Query_builderController extends BasicController {
                 'value' => $detail['value'],
                 'type' => $detail['type'],
                 'table_alias' => $tableAlias,
-                'table_varialbe' => $tableVariable);
+                'table_varialbe' => $tableVariable,
+                'is_unique_index' => !empty($detail['is_unique_index']) ? true : false
+            );
 
             if ($detail['type'] === 'variable') {
                 $variables[$detail['value']] = 1;
@@ -751,7 +753,7 @@ class Query_builderController extends BasicController {
 
         $this->set('columns', $cc);
 
-
+        $this->set('insert_update_method',!empty($_POST['insert_update_method']));
 
         $this->set('variables', array_keys($variables));
 
@@ -761,7 +763,7 @@ class Query_builderController extends BasicController {
             $this->set('return_last_id', false);
         }
 
-        MLog::dExport($_POST);
+//        MLog::dExport($_POST);
 //        MLog::dExport($columns, 'columns');
 //        MLog::dExport($tableInfo, '$tableInfo');
 //        MLog::dExport($lineIdTableArray, '$uidTableMap');
@@ -813,7 +815,7 @@ class Query_builderController extends BasicController {
                     if (isset($nv['table_variable_map'])) {
                         $data['table_variable_map'] = $nv['table_variable_map'];
                     }
-                   if (isset($nv['setting_error_log_function_name'])) {
+                    if (isset($nv['setting_error_log_function_name'])) {
                         $data['setting_error_log_function_name'] = $nv['setting_error_log_function_name'];
                     }
 
@@ -943,17 +945,15 @@ class Query_builderController extends BasicController {
         $sLen1 = strlen($str1);
         $sLen2 = strlen($str2);
 
-        $re=false;
+        $re = false;
         if ($sLen1 > 1 && $sLen2 > 1 && substr($str1, 0, 1) === "'" && substr($str2, 0, 1) === "'" && substr($str1, $sLen1 - 1) === "'" && substr($str2, $sLen2 - 1) === "'") {
-            $re= substr($str1, 0, $sLen1 - 1) . substr($str2, 1);
+            $re = substr($str1, 0, $sLen1 - 1) . substr($str2, 1);
         }
 
-        if($re!==false){
+        if ($re !== false) {
             MLog::d("[{$str1}] + [{$str2}] = [{$re}]");
-        }
-        else{
+        } else {
             MLog::d("[{$str1}]  [{$str2}] can not combine!");
-
         }
         return $re;
     }
@@ -972,37 +972,31 @@ class Query_builderController extends BasicController {
         $newArray = array();
         $buffed = $input[0];
         for ($ind = 1;;) {
-            if(isset($input[$ind])){
-                $newS=  $this->combineStrings($buffed, $input[$ind]);
-                if($newS === false){
+            if (isset($input[$ind])) {
+                $newS = $this->combineStrings($buffed, $input[$ind]);
+                if ($newS === false) {
                     //can not combine
-                    $newArray[]=$buffed;
-                    $newArray[]=$input[$ind];
+                    $newArray[] = $buffed;
+                    $newArray[] = $input[$ind];
 
                     $ind++;
 
-                    if(isset($input[$ind])){
-                        $buffed=$input[$ind];
-                    }
-                    else{
-                        $buffed=null;
+                    if (isset($input[$ind])) {
+                        $buffed = $input[$ind];
+                    } else {
+                        $buffed = null;
                         break;
                     }
-
-
-                }
-                else{
-                    $buffed=$newS;
+                } else {
+                    $buffed = $newS;
                 }
                 $ind++;
-            }
-            else{
-                if($buffed !== null){
-                    $newArray[]=$buffed;
+            } else {
+                if ($buffed !== null) {
+                    $newArray[] = $buffed;
                 }
                 break;
             }
-
         }
 
         return $newArray;

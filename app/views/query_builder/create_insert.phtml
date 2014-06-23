@@ -4,7 +4,7 @@ foreach ($this->variables as $one) {
     echo ', $' . $one;
 }
 ?>){
-<?=$this->custom_header_code;?>
+<?= $this->custom_header_code; ?>
 
 $runQuery="INSERT INTO  ";
 try {
@@ -48,7 +48,6 @@ foreach ($this->columns as $one) {
 
     if ($one['type'] === 'variable') {
         echo '$' . "values .=':{$one['value']}';\n";
-
     } else if ($one['type'] === 'pure') {
         echo '$' . "values .=':fix_{$one['column_name']}';\n";
         echo '$' . "bind_arr[':fix_{$one['column_name']}']='" . str_replace("'", "\\" . "'", $one['value']) . "';";
@@ -64,7 +63,49 @@ echo '$values .= ") ";' . "\n";
 echo '$runQuery.=$columns.$values;';
 ?>
 
+<?
+if ($this->insert_update_method) {
+    echo "\n";
+    echo '$updateStr=\' ON DUPLICATE KEY UPDATE \';';
+    echo "\n";
 
+    $first = true;
+    foreach ($this->columns as $one) {
+
+
+        if (!$one['is_unique_index']) {
+
+            if (!$first) {
+                echo '$' . "updateStr .=',`{$one['column_name']}`=';";
+            } else {
+                echo '$' . "updateStr .=' `{$one['column_name']}`=';";
+            }
+            $first = false;
+
+
+            echo "\n";
+
+
+            if ($one['type'] === 'variable') {
+                echo '$' . "updateStr .=':{$one['value']}';\n";
+            } else if ($one['type'] === 'pure') {
+                echo '$' . "updateStr .=':fix_{$one['column_name']}';\n";
+                echo '$' . "bind_arr[':fix_{$one['column_name']}']='" . str_replace("'", "\\" . "'", $one['value']) . "';\n";
+            } else if ($one['type'] === 'function') {
+                echo '$' . "updateStr .='{$one['value']}';\n";
+            }
+
+
+
+
+            echo "\n";
+        }
+    }
+
+    echo '$runQuery.=$updateStr;';
+    echo "\n";
+}
+?>
 
 
 
@@ -83,20 +124,20 @@ $stmt = $dbh->prepare($runQuery);
 
 $stmt_r = $stmt->execute($bind_arr);
 if($stmt_r){
-<?if($this->return_last_id):?>
- return $dbh->lastInsertId ();
- <?else:?>
- return $stmt->rowCount();
- <?endif?>
+<? if ($this->return_last_id): ?>
+    return $dbh->lastInsertId ();
+<? else: ?>
+    return $stmt->rowCount();
+<? endif ?>
 
 }
 else {
 
 <? if (!empty($this->error_log)): ?>
-        <?= $this->error_log ?>('db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery);
-    <? else: ?>
-        //$errorMessage='db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery;
-    <? endif ?>
+    <?= $this->error_log ?>('db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery);
+<? else: ?>
+    //$errorMessage='db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery;
+<? endif ?>
 return false;
 }
 
@@ -110,6 +151,6 @@ catch ( PDOException $x ) {
 <? endif ?>
 throw $x;
 }
-<?=$this->custom_tailer_code;?>
+<?= $this->custom_tailer_code; ?>   
 
 }
