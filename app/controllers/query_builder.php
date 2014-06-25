@@ -13,6 +13,7 @@ class Query_builderController extends BasicController {
 
 
         $this->view->addInternalCss("ui-lightness/jquery-ui-1.8.17.custom.css");
+        header('Content-Type:text/html; charset=utf-8');
     }
 
     protected $project_name = null;
@@ -35,10 +36,13 @@ class Query_builderController extends BasicController {
         if ($this->project_db !== null) {
             $this->project_db->close();
 
-            $dsn = "{$this->project_db->engine}:host={$this->project_db->host};port={$this->project_db->port}";
+            $dsn = "{$this->project_db->engine}:host={$this->project_db->host};port={$this->project_db->port};charset=UTF8";
+
+
+            $initPDO = array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8");
 
             try {
-                $this->pdo_db = new PDO($dsn, $this->project_db->user, $this->project_db->password);
+                $this->pdo_db = new PDO($dsn, $this->project_db->user, $this->project_db->password, $initPDO);
             } catch (PDOException $exc) {
                 MLog::e($exc->getTraceAsString());
                 $this->pdo_db = null;
@@ -336,8 +340,12 @@ class Query_builderController extends BasicController {
             throw $x;
         }
 
-        $this->set('header', $_POST['create_definitions_header']);
-        $this->set('tailer', $_POST['create_definitions_tailer']);
+        $header = $_POST['create_definitions_header'];
+        $tailer = $_POST['create_definitions_tailer'];
+        $this->set('header', $header);
+        $this->set('tailer', $tailer);
+        $this->saveGlobalSetting();
+        $this->saveSpecialSetting('definition', 'general', array('header' => $header, 'tailer' => $tailer));
     }
 
     public function create_class() {
@@ -753,7 +761,7 @@ class Query_builderController extends BasicController {
 
         $this->set('columns', $cc);
 
-        $this->set('insert_update_method',!empty($_POST['insert_update_method']));
+        $this->set('insert_update_method', !empty($_POST['insert_update_method']));
 
         $this->set('variables', array_keys($variables));
 
@@ -778,6 +786,7 @@ class Query_builderController extends BasicController {
     public function load_setting() {
         $this->setLayout("ajax.phtml");
 
+        MLog::dExport($_GET);
         $name = !empty($_GET['name']) ? $_GET['name'] : null;
         $sub_name = !empty($_GET['sub_name']) ? $_GET['sub_name'] : null;
 
@@ -798,31 +807,14 @@ class Query_builderController extends BasicController {
             } else {
                 $key = $name . '_' . $sub_name;
                 $nv = $this->project_db->get($key);
+                MLog::dExport($nv,"from key{$key}");
                 if ($nv === null) {
                     $re['result'] = 'nodata';
                 } else {
 
                     $re['result'] = 'success';
 
-                    $data = array('' => '');
-
-                    if (isset($nv['setting_custom_tailer_code'])) {
-                        $data['setting_custom_tailer_code'] = $nv['setting_custom_tailer_code'];
-                    }
-                    if (isset($nv['setting_custom_header_code'])) {
-                        $data['setting_custom_header_code'] = $nv['setting_custom_header_code'];
-                    }
-                    if (isset($nv['table_variable_map'])) {
-                        $data['table_variable_map'] = $nv['table_variable_map'];
-                    }
-                    if (isset($nv['setting_error_log_function_name'])) {
-                        $data['setting_error_log_function_name'] = $nv['setting_error_log_function_name'];
-                    }
-
-
-
-
-                    $re['data'] = $data;
+                    $re['data'] = $nv;
                 }
             }
         }
@@ -937,7 +929,7 @@ class Query_builderController extends BasicController {
         }
 
         $re = $this->combineStringArray($re);
-      
+
         return $re;
     }
 
@@ -950,7 +942,7 @@ class Query_builderController extends BasicController {
             $re = substr($str1, 0, $sLen1 - 1) . substr($str2, 1);
         }
 
-        
+
         return $re;
     }
 
@@ -1031,6 +1023,35 @@ class Query_builderController extends BasicController {
             } else {
                 return "{$tableAlias}.`{$columnInfo['name']}`";
             }
+        }
+    }
+
+
+    protected function saveSpecialSetting($namespace, $key, $value) {
+        if (empty($_POST['setting_name'])) {
+            return;
+        }
+        if (empty($_POST['saved_header'])) {
+            return;
+        }
+        $localKey = $_POST['setting_name'] . $_POST['saved_header'] . '_'.$namespace;
+
+
+        $this->openProjectDb();
+        if ($this->project_db !== null) {
+            $localSetting = $this->project_db->get($localKey);
+
+            if ($localSetting === null) {
+                $localSetting = array();
+            }
+
+            $localSetting[$key] = $value;
+
+            $this->project_db->set($localKey, $localSetting);
+            
+            MLog::dExport($localSetting,"{$localKey} write to ");
+
+            $this->project_db->close();
         }
     }
 
