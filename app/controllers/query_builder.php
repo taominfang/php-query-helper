@@ -456,10 +456,10 @@ class Query_builderController extends BasicController {
         }
         foreach ($oderBy as &$one) {
             if ($one['type'] === 'variable') {
-                $variables[$one['variable']] = 1;
+                $variables[$one['variable']] = array('func_param' => true);
                 $descVairalbeName = 'ordery_by_' . $one['variable'] . '_is_desc';
                 $one['desc_variable'] = $descVairalbeName;
-                $variables[$descVairalbeName] = 1;
+                $variables[$descVairalbeName] = array('func_param' => true);
             } else {
                 $column = $uidColumnMap[$one['column_id']];
                 $tableFullName = $lineIdTableFullNameMap[$column['line_uid']];
@@ -481,7 +481,7 @@ class Query_builderController extends BasicController {
         }
 
 
-        $this->set('variables', array_keys($variables));
+        $this->set('variables', $variables);
         $this->set('pagination_function_enable', !empty($_POST['query_add_page_function']));
 
         //MLog::dExport($_POST);
@@ -574,7 +574,7 @@ class Query_builderController extends BasicController {
                 'table_varialbe' => $tableVariable);
 
             if ($detail['type'] === 'variable') {
-                $variables[$detail['value']] = 1;
+                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true);
             }
         }
 
@@ -582,7 +582,7 @@ class Query_builderController extends BasicController {
 
 
 
-        $this->set('variables', array_keys($variables));
+        $this->set('variables', $variables);
 
 
 
@@ -661,7 +661,7 @@ class Query_builderController extends BasicController {
 
 
 
-        $this->set('variables', array_keys($variables));
+        $this->set('variables', $variables);
 
 
 
@@ -755,7 +755,7 @@ class Query_builderController extends BasicController {
             );
 
             if ($detail['type'] === 'variable') {
-                $variables[$detail['value']] = 1;
+                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true);
             }
         }
 
@@ -763,7 +763,7 @@ class Query_builderController extends BasicController {
 
         $this->set('insert_update_method', !empty($_POST['insert_update_method']));
 
-        $this->set('variables', array_keys($variables));
+        $this->set('variables', $variables);
 
         if (!empty($_POST['insert_return_last_id'])) {
             $this->set('return_last_id', true);
@@ -807,7 +807,7 @@ class Query_builderController extends BasicController {
             } else {
                 $key = $name . '_' . $sub_name;
                 $nv = $this->project_db->get($key);
-                MLog::dExport($nv,"from key{$key}");
+                MLog::dExport($nv, "from key{$key}");
                 if ($nv === null) {
                     $re['result'] = 'nodata';
                 } else {
@@ -859,6 +859,7 @@ class Query_builderController extends BasicController {
             }
 
 
+            MLog::d("right:{$rightV}");
 
 
 
@@ -882,14 +883,23 @@ class Query_builderController extends BasicController {
                 $re[] = $this->addQuote($logicV);
                 $re[] = $this->addQuote(' ');
 
-                $rights = explode(',', $rightV);
                 $re[] = $this->addQuote('( ');
-                foreach ($rights as $ind => $one) {
-                    if ($ind !== 0) {
-                        $re[] = $this->addQuote(',');
+
+
+                if ($cond['right_select'] === 'variable_array_value') {
+                    $re[] = $this->transformByType($rightV, $cond['right_select']);
+                } else {
+
+                    $rights = explode(',', $rightV);
+                    foreach ($rights as $ind => $one) {
+                        if ($ind !== 0) {
+                            $re[] = $this->addQuote(',');
+                        }
+                        $re[] = $this->transformByType($one, $cond['right_select']);
                     }
-                    $re[] = $this->transformByType($one, $cond['right_select']);
                 }
+
+
                 $re[] = $this->addQuote(')');
             } else {
                 $re[] = $this->transformByType($leftV, $cond['left_select']);
@@ -996,7 +1006,8 @@ class Query_builderController extends BasicController {
 
     protected function transformByType($v, $type) {
 
-        if ($type === 'in_program_definitions') {
+        if ($type === 'in_program_definitions' || $type === 'variable_array_value') {
+            MLog::d("type:{$type} v:{$v}");
             return $v;
         } else {
             return $this->addQuote($v);
@@ -1008,8 +1019,12 @@ class Query_builderController extends BasicController {
             return '???';
         }
         if ($sel === "variable_value") {
-            $variables[$v] = 1;
+            $variables[$v] = array('func_param' => true, 'bind_var' => true);
             return ':' . $v;
+        } else if ($sel === 'variable_array_value') {
+
+            $variables[$v] = array('func_param' => true, 'bind_var' => false);
+            return "implode(',',{$v})";
         } else if ($sel === 'custom_value' || $sel === 'in_program_definitions') {
             return $v;
         } else {
@@ -1026,7 +1041,6 @@ class Query_builderController extends BasicController {
         }
     }
 
-
     protected function saveSpecialSetting($namespace, $key, $value) {
         if (empty($_POST['setting_name'])) {
             return;
@@ -1034,7 +1048,7 @@ class Query_builderController extends BasicController {
         if (empty($_POST['saved_header'])) {
             return;
         }
-        $localKey = $_POST['setting_name'] . $_POST['saved_header'] . '_'.$namespace;
+        $localKey = $_POST['setting_name'] . $_POST['saved_header'] . '_' . $namespace;
 
 
         $this->openProjectDb();
@@ -1048,8 +1062,8 @@ class Query_builderController extends BasicController {
             $localSetting[$key] = $value;
 
             $this->project_db->set($localKey, $localSetting);
-            
-            MLog::dExport($localSetting,"{$localKey} write to ");
+
+            MLog::dExport($localSetting, "{$localKey} write to ");
 
             $this->project_db->close();
         }

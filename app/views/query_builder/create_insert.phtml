@@ -1,7 +1,8 @@
-<? $used_variables = array(); ?>
 public function <?= $this->function_name ?>($dbh<?
-foreach ($this->variables as $one) {
-    echo ', $' . $one;
+foreach ($this->variables as $name=>$setting) {
+    if(!empty($setting['func_param'])){
+        echo ', $' . $name;
+    }
 }
 ?>){
 <?= $this->custom_header_code; ?>
@@ -110,9 +111,10 @@ if ($this->insert_update_method) {
 
 
 <?
-foreach ($this->variables as $one) {
-    if (empty($used_variables[$one])) {
-        echo '$bind_arr[\':' . $one . '\']=$' . $one . ";\n";
+foreach ($this->variables as $name=>$setting) {
+    if(!empty($setting['bind_var'])){
+
+        echo '$bind_arr[\':' . $name . '\']=$' . $name . ";\n";
     }
 }
 ?>
@@ -151,6 +153,6 @@ catch ( PDOException $x ) {
 <? endif ?>
 throw $x;
 }
-<?= $this->custom_tailer_code; ?>   
+<?= $this->custom_tailer_code; ?>
 
 }

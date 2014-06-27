@@ -665,6 +665,10 @@
         $('#query_on_clause_div_id_' + uid).remove();
 
 
+        if(table_number ===1){
+            $('#query_select_tables option').first().next().prop('selected',true);
+        }
+
     }
 
     var used_alias_table_map = {};
@@ -916,8 +920,8 @@
                 }
             }
         });
-        
-        
+
+
          _loadSetting('definition', function(rev) {
             var setting = JSON.parse(rev);
              if (typeof setting['data'] !== 'undefined') {

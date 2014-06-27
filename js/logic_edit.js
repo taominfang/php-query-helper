@@ -6,7 +6,7 @@
 
 function QueryLogic(div_id, initData, conditionOptions) {
 
-    this.uuid=this.getUUID();
+    this.uuid = this.getUUID();
     if (typeof div_id === 'undefined') {
         return;
     }
@@ -58,10 +58,11 @@ function QueryLogic(div_id, initData, conditionOptions) {
     }
 
     var options = "";
-
-    options += "<option value='custom_value'>CUSTOM VALUE</option>";
-    options += "<option value='variable_value'>VARIABLE</option>";
-    options += "<option value='in_program_definitions'>Program Definitions</option>";
+    var extraOptions = "";
+    extraOptions += "<option value='custom_value'>CUSTOM VALUE</option>";
+    extraOptions += "<option value='variable_value'>VARIABLE</option>";
+    extraOptions += "<option value='variable_array_value'>VARIABLE Array</option>";
+    extraOptions += "<option value='in_program_definitions'>Program Definitions</option>";
 
     for (var ind in this.uid_show_text_map) {
 
@@ -80,9 +81,9 @@ function QueryLogic(div_id, initData, conditionOptions) {
 
 
 
-    $('#logic_edit_dialog_left_options').html(options);
-    $('#logic_edit_dialog_right_options').html(options);
-    $('#logic_edit_dialog_extra_options').html(options);
+    $('#logic_edit_dialog_left_options').html(options + extraOptions);
+    $('#logic_edit_dialog_right_options').html(extraOptions + options);
+    $('#logic_edit_dialog_extra_options').html(extraOptions + options);
 
 
 
@@ -227,7 +228,7 @@ QueryLogic.prototype.editDialogSaveValue = function() {
 
                     var sel = $('#' + ind).val();
                     this.current_edit_node.condition[saveSelectName] = sel;
-                    if (sel === "variable_value" || sel === 'custom_value' || sel === 'in_program_definitions' || ind === 'logic_edit_dialog_logic_options') {
+                    if (sel === "variable_value" || sel === 'variable_array_value' || sel === 'custom_value' || sel === 'in_program_definitions' || ind === 'logic_edit_dialog_logic_options') {
                         this.current_edit_node.condition[savaValueName] = values[savaValueName];
 
                     }
@@ -307,7 +308,7 @@ QueryLogic.prototype.initEditDialogSelectInputValue = function() {
 QueryLogic.prototype.editDialogSetInputBySelect = function(selectId) {
     var inputId = this.editDialogSelectInputSet[selectId]['input_id'];
     var cv = $('#' + selectId).val();
-    if (cv === 'custom_value' || cv === 'variable_value' || cv==='in_program_definitions') {
+    if (cv === 'custom_value' || cv === 'variable_value' || cv === 'variable_array_value' || cv === 'in_program_definitions') {
         $('#' + inputId).prop('readonly', false);
     }
     else {
@@ -622,7 +623,7 @@ QueryLogic.prototype.getShowText = function(sel, v) {
     if (v === '') {
         return "???";
     }
-    if (sel === "variable_value" || sel === 'custom_value'|| sel==='in_program_definitions') {
+    if (sel === "variable_value" || sel === 'variable_array_value' || sel === 'custom_value' || sel === 'in_program_definitions') {
         return v;
     }
     else {
@@ -681,6 +682,16 @@ QueryLogic.prototype.node2Str = function(node) {
             extraV = ":" + extraV;
         }
 
+if (cond.left_select === 'variable_array_value') {
+            leftV = "implode(',',"+leftV+")";
+        }
+        if (cond.right_select === 'variable_array_value') {
+            rightV = "implode(',',"+rightV+")";
+        }
+        if (cond.extra_select === 'variable_array_value') {
+            extraV = "implode(',',"+extraV+")";
+        }
+
 
 
         if (logicV === "IS NULL" || logicV === 'IS NOT NULL') {
@@ -693,8 +704,8 @@ QueryLogic.prototype.node2Str = function(node) {
             re = leftV + " " + logicV + " " + rightV + " AND " + extraV;
         }
 
-        else if(logicV === 'IN' || logicV ==='NOT IN'){
-            re = leftV + " " + logicV + " (" + rightV+")";
+        else if (logicV === 'IN' || logicV === 'NOT IN') {
+            re = leftV + " " + logicV + " (" + rightV + ")";
         }
 
         else {
