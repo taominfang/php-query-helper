@@ -1,6 +1,7 @@
+
 public function <?= $this->function_name ?>($dbh<?
-foreach ($this->variables as $name=>$setting) {
-    if(!empty($setting['func_param'])){
+foreach ($this->variables as $name => $setting) {
+    if (!empty($setting['func_param'])) {
         echo ', $' . $name;
     }
 }
@@ -111,22 +112,16 @@ if (!empty($this->limit)) {
 }
 ?>
 
-$bind_arr = array();
 
-<?
-foreach ($this->variables as $name=>$setting) {
-    if(!empty($setting['bind_var'])){
 
-        echo '$bind_arr[\':' . $name . '\']=$' . $name . ";\n";
-    }
-}
-?>
 
 <? if ($this->pagination_function_enable): ?>
     $runQuery="SELECT count(*) total ".$queryBase;
     $stmt = $dbh->prepare($runQuery);
 
-    $stmt_rv = $stmt->execute($bind_arr);
+    <?$this->generatPdoBinds('$stmt'); ?>
+
+    $stmt_rv = $stmt->execute();
 
     if ($stmt_rv) {
 
@@ -163,7 +158,10 @@ foreach ($this->variables as $name=>$setting) {
     $from=$pageNo*$pageSize;
     $runQuery=$selectColumns. $queryBase.$order_clause." limit {$from},{$pageSize}";
     $stmt2= $dbh->prepare($runQuery);
-    $stmt_rv2 = $stmt2->execute($bind_arr);
+
+
+     <?$this->generatPdoBinds('$stmt2'); ?>
+    $stmt_rv2 = $stmt2->execute();
     if($stmt_rv2){
     $re['data']=$stmt2->fetchAll();
     $pageInfo['fetch_count']=$stmt2->rowCount();
@@ -195,7 +193,8 @@ foreach ($this->variables as $name=>$setting) {
     //echo $runQuery."\n";
 
     $stmt = $dbh->prepare($runQuery);
-    $stmt_rv = $stmt->execute($bind_arr);
+     <?$this->generatPdoBinds('$stmt'); ?>
+    $stmt_rv = $stmt->execute();
 
     if ($stmt_rv) {
     <? if ($this->query_return_first_row): ?>

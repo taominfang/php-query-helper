@@ -1,14 +1,14 @@
-public function <?= $this->function_name ?>($dbh<?
-foreach ($this->variables as $name=>$setting) {
-    if(!empty($setting['func_param'])){
-        echo ', $' . $name;
+public function <?= $this->function_name ?>($dbh<? if ($this->group_update): ?>,$insertValues<? else: ?><?
+    foreach ($this->variables as $name => $setting) {
+        if (!empty($setting['func_param'])) {
+            echo ', $' . $name;
+        }
     }
-}
-?>){
+    ?><? endif; ?>){
 <?= $this->custom_header_code; ?>
 
 $runQuery="INSERT INTO  ";
-try {
+
 
 
 <?
@@ -30,7 +30,7 @@ foreach ($this->frome_tables as $one) {
 }
 ?>
 
-$bind_arr = array();
+
 $columns = "(";
 $values = " values( ";
 <?
@@ -51,7 +51,6 @@ foreach ($this->columns as $one) {
         echo '$' . "values .=':{$one['value']}';\n";
     } else if ($one['type'] === 'pure') {
         echo '$' . "values .=':fix_{$one['column_name']}';\n";
-        echo '$' . "bind_arr[':fix_{$one['column_name']}']='" . str_replace("'", "\\" . "'", $one['value']) . "';";
     } else if ($one['type'] === 'function') {
         echo '$' . "values .='{$one['value']}';\n";
     }
@@ -91,7 +90,6 @@ if ($this->insert_update_method) {
                 echo '$' . "updateStr .=':{$one['value']}';\n";
             } else if ($one['type'] === 'pure') {
                 echo '$' . "updateStr .=':fix_{$one['column_name']}';\n";
-                echo '$' . "bind_arr[':fix_{$one['column_name']}']='" . str_replace("'", "\\" . "'", $one['value']) . "';\n";
             } else if ($one['type'] === 'function') {
                 echo '$' . "updateStr .='{$one['value']}';\n";
             }
@@ -110,39 +108,84 @@ if ($this->insert_update_method) {
 
 
 
-<?
-foreach ($this->variables as $name=>$setting) {
-    if(!empty($setting['bind_var'])){
-
-        echo '$bind_arr[\':' . $name . '\']=$' . $name . ";\n";
-    }
-}
-?>
 
 
 
-
+try {
 $stmt = $dbh->prepare($runQuery);
+<? if ($this->around_transaction): ?>
+    $dbh->beginTransaction();
+    $errorFlag = false;
 
-$stmt_r = $stmt->execute($bind_arr);
-if($stmt_r){
-<? if ($this->return_last_id): ?>
-    return $dbh->lastInsertId ();
+<? endif; ?>
+
+<? if ($this->group_update): ?>
+
+    $totalCount=0;
+    $insertIds=array();
+    foreach ($insertValues as $one) {
+    <? $this->generatPdoBinds('$stmt', true); ?>
+    <? $this->generatPdoFixStrBinds('$stmt'); ?>
+    $stmt_r = $stmt->execute();
+    if ($stmt_r) {
+    $totalCount+= $stmt->rowCount();
+    $insertIds[]=$dbh->lastInsertId ();
+    } else {
+
+    error_log('db error info:' . var_export($stmt->errorInfo(), true) . " query:" . $runQuery);
+    <? if ($this->around_transaction): ?>
+        $errorFlag = true;
+
+        break;
+
+    <? endif; ?>
+    }
+
+
+
+    }
+    <? if ($this->around_transaction): ?>
+        if ($errorFlag) {
+        $dbh->rollBack();
+        $totalCount=0;
+        } else {
+        $dbh->commit();
+        }
+
+
+
+    <? endif; ?>
+
+    <? if ($this->return_last_id): ?>
+        return $insertIds;
+    <? else: ?>
+        return $totalCount;
+    <? endif ?>
+
 <? else: ?>
-    return $stmt->rowCount();
-<? endif ?>
+    <? $this->generatPdoBinds('$stmt'); ?>
+    <? $this->generatPdoFixStrBinds('$stmt'); ?>
 
-}
-else {
 
-<? if (!empty($this->error_log)): ?>
-    <?= $this->error_log ?>('db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery);
-<? else: ?>
-    //$errorMessage='db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery;
-<? endif ?>
-return false;
-}
+    $stmt_r = $stmt->execute();
+    if($stmt_r){
+    <? if ($this->return_last_id): ?>
+        return $dbh->lastInsertId ();
+    <? else: ?>
+        return $stmt->rowCount();
+    <? endif ?>
 
+    }
+    else {
+
+    <? if (!empty($this->error_log)): ?>
+        <?= $this->error_log ?>('db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery);
+    <? else: ?>
+        //$errorMessage='db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery;
+    <? endif ?>
+    return false;
+    }
+<? endif; ?>
 
 }
 catch ( PDOException $x ) {
@@ -151,6 +194,10 @@ catch ( PDOException $x ) {
 <? else: ?>
     //$errorMessage='db error info:' . $x->getMessage()." query:".$runQuery;
 <? endif ?>
+<? if ($this->around_transaction): ?>
+    $dbh->rollBack();
+
+<? endif; ?>
 throw $x;
 }
 <?= $this->custom_tailer_code; ?>

@@ -134,8 +134,9 @@
             for (var ind in columns) {
                 var one = columns[ind];
                 var obj = {
-                    display: (one.column.talias !== '' ? one.column.talias + "." : "") + one.column.cname,
-                    id: one.uuid
+                    display: (one.column.talias !== '' ? one.column.talias + "." : "") + one.column.name,
+                    id: one.uuid,
+                    type: one.column.type
 
                 };
                 showColumn.push(obj);
@@ -221,8 +222,9 @@
             for (var ind in columns) {
                 var one = columns[ind];
                 var obj = {
-                    display: (one.column.talias !== '' ? one.column.talias + "." : "") + one.column.cname,
-                    id: one.uuid
+                    display: (one.column.talias !== '' ? one.column.talias + "." : "") + one.column.name,
+                    id: one.uuid,
+                    type: one.column.type
 
                 };
                 showColumn.push(obj);
@@ -269,8 +271,9 @@
             for (var ind in columns) {
                 var one = columns[ind];
                 var obj = {
-                    display: (one.column.talias !== '' ? one.column.talias + "." : "") + one.column.cname,
-                    id: one.uuid
+                    display: (one.column.talias !== '' ? one.column.talias + "." : "") + one.column.name,
+                    id: one.uuid,
+                    type: one.column.type
 
                 };
                 showColumn.push(obj);
@@ -316,8 +319,10 @@
             for (var ind in columns) {
                 var one = columns[ind];
                 var obj = {
-                    display: (one.column.talias !== '' ? one.column.talias + "." : "") + one.column.cname,
-                    id: one.uuid
+                    display: (one.column.talias !== '' ? one.column.talias + "." : "") + one.column.name,
+                    id: one.uuid,
+                    type: one.column.type
+
 
                 };
                 showColumn.push(obj);
@@ -380,6 +385,7 @@
 
             var input = "<input class='query_order_by_column_variable' type='hidden' value='" + vn + "' >";
             input += "<input class='query_order_by_type' type='hidden' value='variable' >";
+            input += "<input type='hidden'  id='query_order_by_column_type_" + one + "' value='" + info.type + "'>";
 
             html += input;
         }
@@ -483,13 +489,14 @@
 
 
 
-            var input = "= <input type='text' id='column_value_" + one + "' value='" + getVariableName(text) + "'>";
+            var input = "<input type='text' id='update_column_value_" + one + "' value='" + getVariableName(text) + "'>";
+            input += "<input type='hidden'  id='update_column_type_" + one + "' value='" + info.type + "'>";
 
             html += input;
 
-            html += "<input type='radio' name='column_value_type_" + one + "' value='pure' > Pure Value";
-            html += "<input type='radio' name='column_value_type_" + one + "' value='variable' checked='checked'> Variable ";
-            html += "<input type='radio' name='column_value_type_" + one + "' value='function'> Internal Function ";
+            html += "<input type='radio' name='update_column_value_type_" + one + "' value='pure' > Pure Value";
+            html += "<input type='radio' name='update_column_value_type_" + one + "' value='variable' checked='checked'> Variable ";
+            html += "<input type='radio' name='update_column_value_type_" + one + "' value='function'> Internal Function ";
             html += "<span>,</span>";
 
             html += "</div>";
@@ -522,15 +529,16 @@
 
 
 
-            var input = "= <input type='text' id='column_value_" + one + "' value='" + getVariableName(text) + "'>";
+            var input = "<input type='text' id='insert_column_value_" + one + "' value='" + getVariableName(text) + "'>";
+            input += "<input type='hidden'  id='insert_column_type_" + one + "' value='" + info.type + "'>";
 
             html += input;
 
-            html += "<input type='radio' name='column_value_type_" + one + "' value='pure' > Pure Value";
-            html += "<input type='radio' name='column_value_type_" + one + "' value='variable' checked='checked'> Variable ";
-            html += "<input type='radio' name='column_value_type_" + one + "' value='function'> Internal Function ";
+            html += "<input type='radio' name='insert_column_value_type_" + one + "' value='pure' > Pure Value";
+            html += "<input type='radio' name='insert_column_value_type_" + one + "' value='variable' checked='checked'> Variable ";
+            html += "<input type='radio' name='insert_column_value_type_" + one + "' value='function'> Internal Function ";
             html += "<span>,</span>";
-            html += "<input type='checkbox' name='column_value_is_unique_" + one + "' value='1'> Is Uniqu Index ";
+            html += "<input type='checkbox' name='insert_column_value_is_unique_" + one + "' value='1'> Is Uniqu Index ";
             html += "</div>";
         }
 
@@ -665,8 +673,8 @@
         $('#query_on_clause_div_id_' + uid).remove();
 
 
-        if(table_number ===1){
-            $('#query_select_tables option').first().next().prop('selected',true);
+        if (table_number === 1) {
+            $('#query_select_tables option').first().next().prop('selected', true);
         }
 
     }
@@ -862,7 +870,9 @@
                         table: tableInfo.name,
                         db: tableInfo.db,
                         uuid: uuuid,
-                        line_uid: lineId
+                        line_uid: lineId,
+                        type: tableInfoDetail[i3].type,
+                        talias: aliasName
                     };
                     uidColumnMap[uuuid] = info;
 
@@ -875,10 +885,7 @@
 
                 columns.push({
                     uuid: columnUid,
-                    column: {
-                        cname: uidColumnMap[columnUid].name,
-                        talias: aliasName
-                    }
+                    column: uidColumnMap[columnUid]
 
                 });
 
@@ -922,20 +929,20 @@
         });
 
 
-         _loadSetting('definition', function(rev) {
+        _loadSetting('definition', function(rev) {
             var setting = JSON.parse(rev);
-             if (typeof setting['data'] !== 'undefined') {
+            if (typeof setting['data'] !== 'undefined') {
                 var data = setting['data'];
                 if (typeof data['general'] !== 'undefined') {
                     if (typeof data['general']['header'] !== 'undefined') {
                         $('#create_definitions_header').val(data['general']['header']);
                     }
                     if (typeof data['general']['tailer'] !== 'undefined') {
-                         $('#create_definitions_tailer').val(data['general']['tailer']);
+                        $('#create_definitions_tailer').val(data['general']['tailer']);
                     }
                 }
             }
-         });
+        });
     }
 
     function _loadSetting(subName, callBack) {
@@ -1088,10 +1095,13 @@
         $('#update_column_area_column_list input').each(function() {
             var id;
             if ($(this).attr('type') === 'text') {
-                id = $(this).attr('id').replace(/column_value_/g, '');
+                id = $(this).attr('id').replace(/update_column_value_/g, '');
+            }
+            else if ($(this).attr('type') === 'hidden') {
+                id = $(this).attr('id').replace(/update_column_type_/g, '');
             }
             else {
-                id = $(this).attr('name').replace(/column_value_type_/g, '');
+                id = $(this).attr('name').replace(/update_column_value_type_/g, '');
             }
 
             if (typeof columns[id] === 'undefined') {
@@ -1100,6 +1110,9 @@
 
             if ($(this).attr('type') === 'text') {
                 columns[id]['value'] = $(this).val();
+            }
+            else if ($(this).attr('type') === 'hidden') {
+                columns[id]['data_type'] = $(this).val();
             }
             else if ($(this).attr('type') === 'radio') {
                 if ($(this).prop('checked')) {
@@ -1185,13 +1198,16 @@
         $('#insert_column_area_column_list input').each(function() {
             var id;
             if ($(this).attr('type') === 'text') {
-                id = $(this).attr('id').replace(/column_value_/g, '');
+                id = $(this).attr('id').replace(/insert_column_value_/g, '');
+            }
+            else if ($(this).attr('type') === 'hidden') {
+                id = $(this).attr('id').replace(/insert_column_type_/g, '');
             }
             else if ($(this).attr('type') === 'radio') {
-                id = $(this).attr('name').replace(/column_value_type_/g, '');
+                id = $(this).attr('name').replace(/insert_column_value_type_/g, '');
             }
             else if ($(this).attr('type') === 'checkbox') {
-                id = $(this).attr('name').replace(/column_value_is_unique_/g, '');
+                id = $(this).attr('name').replace(/insert_column_value_is_unique_/g, '');
             }
 
             if (typeof columns[id] === 'undefined') {
@@ -1206,6 +1222,10 @@
                     columns[id]['type'] = $(this).val();
                 }
             }
+            else if ($(this).attr('type') === 'hidden') {
+                columns[id]['data_type'] = $(this).val();
+            }
+
             else if ($(this).attr('type') === 'checkbox' && $(this).prop('checked')) {
                 columns[id]['is_unique_index'] = 1;
             }
@@ -1557,6 +1577,9 @@ Action:
 
             Update Function Name:<input class="update_name" name="update_name" value="" type="text">
 
+            <input type="checkbox" id="group_update" name='group_update'  value="1">Group Update
+            <input type="checkbox" id="around_transaction" name='around_transaction'  value="1">Around Transaction
+
         </form>
         <button id="create_update_bt">Create Update</button>
     </div>
@@ -1581,6 +1604,8 @@ Action:
             Insert Function Name:<input class="insert_name" name="insert_name" value="" type="text">
             <input type="checkbox" name='insert_return_last_id'  checked="checked" value="1">Return Last ID
             <input type="checkbox" name='insert_update_method'   value="1">Insert .. on duplicate update method
+            <input type="checkbox" id="group_update" name='group_update'  value="1">Group Update
+            <input type="checkbox" id="around_transaction" name='around_transaction'  value="1">Around Transaction
         </form>
         <button id="create_insert_bt">Create Insert</button>
     </div>
@@ -1606,6 +1631,8 @@ Action:
 
 
             Delete Function Name:<input class="delete_name" name="delete_name" value="" type="text">
+            <input type="checkbox" id="group_update" name='group_update'  value="1">Group Update
+            <input type="checkbox" id="around_transaction" name='around_transaction'  value="1">Around Transaction
 
         </form>
         <button id="create_delete_bt">Create Delete</button>

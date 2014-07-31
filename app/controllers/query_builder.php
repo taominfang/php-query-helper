@@ -4,6 +4,8 @@ include dirname(__FILE__) . '/../models/project.php';
 
 class Query_builderController extends BasicController {
 
+    protected $view_class = "view_query_builder";
+
     public function pre_filter(&$methodName = null) {
         parent::pre_filter($methodName);
 
@@ -456,10 +458,10 @@ class Query_builderController extends BasicController {
         }
         foreach ($oderBy as &$one) {
             if ($one['type'] === 'variable') {
-                $variables[$one['variable']] = array('func_param' => true);
+                $variables[$one['variable']] = array('func_param' => true, 'bind_type' => '');
                 $descVairalbeName = 'ordery_by_' . $one['variable'] . '_is_desc';
                 $one['desc_variable'] = $descVairalbeName;
-                $variables[$descVairalbeName] = array('func_param' => true);
+                $variables[$descVairalbeName] = array('func_param' => true, 'bind_type' => '');
             } else {
                 $column = $uidColumnMap[$one['column_id']];
                 $tableFullName = $lineIdTableFullNameMap[$column['line_uid']];
@@ -571,10 +573,12 @@ class Query_builderController extends BasicController {
                 'value' => $detail['value'],
                 'type' => $detail['type'],
                 'table_alias' => $tableAlias,
+                'bind_type' => $detail['data_type'],
                 'table_varialbe' => $tableVariable);
 
             if ($detail['type'] === 'variable') {
-                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true);
+
+                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $detail['data_type']);
             }
         }
 
@@ -584,6 +588,8 @@ class Query_builderController extends BasicController {
 
         $this->set('variables', $variables);
 
+        $this->set('group_update', !empty($_POST['group_update']));
+        $this->set('around_transaction', !empty($_POST['around_transaction']));
 
 
         //MLog::dExport($_POST);
@@ -659,6 +665,8 @@ class Query_builderController extends BasicController {
 
 
 
+        $this->set('group_update', !empty($_POST['group_update']));
+        $this->set('around_transaction', !empty($_POST['around_transaction']));
 
 
         $this->set('variables', $variables);
@@ -751,11 +759,13 @@ class Query_builderController extends BasicController {
                 'type' => $detail['type'],
                 'table_alias' => $tableAlias,
                 'table_varialbe' => $tableVariable,
+                'bind_type' => $detail['data_type'],
                 'is_unique_index' => !empty($detail['is_unique_index']) ? true : false
             );
 
             if ($detail['type'] === 'variable') {
-                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true);
+
+                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $detail['data_type']);
             }
         }
 
@@ -764,6 +774,10 @@ class Query_builderController extends BasicController {
         $this->set('insert_update_method', !empty($_POST['insert_update_method']));
 
         $this->set('variables', $variables);
+
+        $this->set('group_update', !empty($_POST['group_update']));
+        $this->set('around_transaction', !empty($_POST['around_transaction']));
+
 
         if (!empty($_POST['insert_return_last_id'])) {
             $this->set('return_last_id', true);
@@ -825,6 +839,8 @@ class Query_builderController extends BasicController {
 
     protected function logic2String($logic, $columnIdInfoMap, $lineIdAliasMap, &$variables) {
 
+        MLog::dExport($logic);
+
         if ($logic === null) {
             return null;
         }
@@ -845,9 +861,9 @@ class Query_builderController extends BasicController {
             $re = array();
             $logicV = null;
 
-            $leftV = $this->getShowText($cond['left_select'], $cond['left_value'], $columnIdInfoMap, $lineIdAliasMap, $variables);
-            $rightV = $this->getShowText($cond['right_select'], $cond['right_value'], $columnIdInfoMap, $lineIdAliasMap, $variables);
-            $extraV = $this->getShowText($cond['extra_select'], $cond['extra_value'], $columnIdInfoMap, $lineIdAliasMap, $variables);
+            $leftV = $this->getShowText($cond['left_select'], $cond['left_value'], $columnIdInfoMap, $lineIdAliasMap, $logic['data_type'], $variables);
+            $rightV = $this->getShowText($cond['right_select'], $cond['right_value'], $columnIdInfoMap, $lineIdAliasMap, $logic['data_type'], $variables);
+            $extraV = $this->getShowText($cond['extra_select'], $cond['extra_value'], $columnIdInfoMap, $lineIdAliasMap, $logic['data_type'], $variables);
 
 
 
@@ -1014,17 +1030,17 @@ class Query_builderController extends BasicController {
         }
     }
 
-    protected function getShowText($sel, $v, $columnIdInfoMap, $lineIdAliasMap, &$variables) {
+    protected function getShowText($sel, $v, $columnIdInfoMap, $lineIdAliasMap, $dataType, &$variables) {
         if ($v === '') {
             return '???';
         }
         if ($sel === "variable_value") {
-            $variables[$v] = array('func_param' => true, 'bind_var' => true);
+            $variables[$v] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $dataType);
             return ':' . $v;
         } else if ($sel === 'variable_array_value') {
 
             $variables[$v] = array('func_param' => true, 'bind_var' => false);
-            return "implode(',',".'$'."{$v})";
+            return "implode(','," . '$' . "{$v})";
         } else if ($sel === 'custom_value' || $sel === 'in_program_definitions') {
             return $v;
         } else {

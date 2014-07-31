@@ -7,8 +7,14 @@ class BasicController {
     protected $view;
     protected $required_in_session = array();
 
+    protected $view_class=null;
+
     public $redirect_url=null;
 
+
+    public function getViewClass(){
+        return $this->view_class;
+    }
 
     public function redirect($url){
         $this->redirect_url=$url;

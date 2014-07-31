@@ -1,5 +1,5 @@
 <?php
-
+spl_autoload_register('my_autoloader');
 $currentDir = dirname(__FILE__);
 include_once $currentDir . '/function.php';
 include_once $currentDir . '/log.php';
@@ -9,7 +9,7 @@ include_once realpath($currentDir . '/../config') . '/data_source.php';
 
 date_default_timezone_set('America/Los_Angeles');
 
-$view = new view();
+
 
 $t1 = explode('?', $_SERVER['REQUEST_URI']);
 
@@ -46,8 +46,8 @@ if (!empty($uris[2])) {
 
 
 if (!is_file($classPath)) {
-    $view->assign('errorMessage', "class file [{$classPath}] is not exist");
-    $view->display('error/general_error.phtml');
+    error_showing("class file [{$classPath}] is not exist");
+
     return;
 }
 
@@ -65,20 +65,31 @@ include_once $classPath;
 
 if (!class_exists($className)) {
 
-    $view->assign('errorMessage', "Can not find class [{$className}]  in the file [{$classPath}]");
-    $view->display('error/general_error.phtml');
+
+    error_showing("Can not find class [{$className}]  in the file [{$classPath}]");
     return;
 }
 
 
 if (!method_exists($className, $method)) {
 
-    $view->assign('errorMessage', "Can not find method [{$method}] in class [{$className}]  in the file [{$classPath}]");
-    $view->display('error/general_error.phtml');
+    error_showing("Can not find method [{$method}] in class [{$className}]  in the file [{$classPath}]");
+
     return;
 }
 
 $controller = new $className;
+
+
+$viewClass = $controller->getViewClass();
+
+if ($viewClass === null) {
+
+    $view = new view();
+}
+else{
+    $view= new $viewClass;
+}
 
 $controller->setView($view);
 
@@ -119,8 +130,38 @@ try {
 
     $ee = "Exception:" . $e->getMessage() . ' in file:' . $e->getFile() . ' line [' . $e->getLine() . ']';
     MLog::e($e->getTraceAsString());
-    $view->assign('errorMessage', $ee);
-    $view->display('error/general_error.phtml');
+    error_showing($ee);
     return;
+}
+
+function error_showing($errorMessage) {
+    $v = new view();
+    $v->assign('errorMessage', $errorMessage);
+    $v->display('error/general_error.phtml');
+}
+
+function my_autoloader($class) {
+
+
+    if (strpos($class, "db_") === 0) {
+        $dbClassFile = realpath(dirname(__FILE__)) . '/../models/db/' . $class . '.php';
+        if (is_file($dbClassFile)) {
+            include_once $dbClassFile;
+            return;
+        }
+    }
+
+    error_log("try to load:{$class}");
+
+    if (strpos($class, "view_") === 0) {
+        $viewClassFile = realpath(dirname(__FILE__)) . '/../views/containers/' . $class . '.php';
+        if (is_file($viewClassFile)) {
+            include_once $viewClassFile;
+            return;
+        }
+        else{
+            error_log("{$viewClassFile} is not a file");
+        }
+    }
 }
 ?>

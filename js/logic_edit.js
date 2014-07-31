@@ -48,13 +48,18 @@ function QueryLogic(div_id, initData, conditionOptions) {
     });
 
     this.uid_show_text_map = {};
+    this.uid_column_map={};
 
     for (var ind in conditionOptions) {
         var one = conditionOptions[ind];
         var showText = (typeof one.column.talias !== 'undefined' && one.column.talias !== '') ?
-                one.column.talias + "." + one.column.cname :
-                one.column.cname;
+                one.column.talias + "." + one.column.name :
+                one.column.name;
         this.uid_show_text_map[one.uuid] = showText;
+
+        this.uid_column_map[one.uuid] = one.column;
+
+
     }
 
     var options = "";
@@ -218,6 +223,7 @@ QueryLogic.prototype.editDialogSaveValue = function() {
 
 
 
+
             var logicSelect = $('#logic_edit_dialog_logic_options').val();
 
             if (vc > 1) {
@@ -234,6 +240,10 @@ QueryLogic.prototype.editDialogSaveValue = function() {
                     }
                     else {
                         this.current_edit_node.condition[savaValueName] = sel;
+
+                        if(typeof this.uid_column_map[sel] !== 'undefined'){
+                            this.current_edit_node.data_type=this.uid_column_map[sel].type;
+                        }
                     }
 
                 }
@@ -443,6 +453,7 @@ QueryLogic.prototype.createLogicNode = function(parent, type, copyFrom) {
         connector: null,
         condition: null,
         reverse: false,
+        data_type:"",
         uuid: this.getUUID()
 
     };
@@ -682,14 +693,14 @@ QueryLogic.prototype.node2Str = function(node) {
             extraV = ":" + extraV;
         }
 
-if (cond.left_select === 'variable_array_value') {
-            leftV = "implode(',',"+leftV+")";
+        if (cond.left_select === 'variable_array_value') {
+            leftV = "implode(','," + leftV + ")";
         }
         if (cond.right_select === 'variable_array_value') {
-            rightV = "implode(',',"+rightV+")";
+            rightV = "implode(','," + rightV + ")";
         }
         if (cond.extra_select === 'variable_array_value') {
-            extraV = "implode(',',"+extraV+")";
+            extraV = "implode(','," + extraV + ")";
         }
 
 

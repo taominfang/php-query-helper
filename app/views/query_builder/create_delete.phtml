@@ -1,15 +1,14 @@
 
-public function <?= $this->function_name ?>($dbh<?
-foreach ($this->variables as $name=>$setting) {
-    if(!empty($setting['func_param'])){
-        echo ', $' . $name;
+public function <?= $this->function_name ?>($dbh<? if ($this->group_update): ?>,$deleteValues<? else: ?><?
+    foreach ($this->variables as $name => $setting) {
+        if (!empty($setting['func_param'])) {
+            echo ', $' . $name;
+        }
     }
-}
-?>){
+    ?><? endif; ?>){
 <?= $this->custom_header_code; ?>
 
 $runQuery="DELETE FROM  ";
-try {
 
 
 <?
@@ -30,7 +29,7 @@ foreach ($this->frome_tables as $one) {
     break;
 }
 ?>
-$bind_arr = array();
+
 
 <?
 if (!empty($this->where_claus)) {
@@ -44,37 +43,79 @@ if (!empty($this->where_claus)) {
 
 
 
-<?
-
-
-foreach ($this->variables as $name=>$setting) {
-    if(!empty($setting['bind_var'])){
-
-        echo '$bind_arr[\':' . $name . '\']=$' . $name . ";\n";
-    }
-}
-?>
 
 
 
+
+try {
 
 $stmt = $dbh->prepare($runQuery);
+<? if ($this->around_transaction): ?>
+    $dbh->beginTransaction();
+    $errorFlag = false;
 
-$stmt_r = $stmt->execute($bind_arr);
-if($stmt_r){
-return $stmt->rowCount();
-}
-else {
+<? endif; ?>
 
-<? if (!empty($this->error_log)): ?>
-    <?= $this->error_log ?>('db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery);
+<? if ($this->group_update): ?>
+
+    $totalCount=0;
+
+    foreach ($deleteValues as $one) {
+    <? $this->generatPdoBinds('$stmt', true); ?>
+    <? $this->generatPdoFixStrBinds('$stmt'); ?>
+    $stmt_r = $stmt->execute();
+    if ($stmt_r) {
+    $totalCount+= $stmt->rowCount();
+
+    } else {
+
+    error_log('db error info:' . var_export($stmt->errorInfo(), true) . " query:" . $runQuery);
+    <? if ($this->around_transaction): ?>
+        $errorFlag = true;
+
+        break;
+
+    <? endif; ?>
+    }
+
+
+
+    }
+    <? if ($this->around_transaction): ?>
+        if ($errorFlag) {
+        $dbh->rollBack();
+        $totalCount=0;
+        } else {
+        $dbh->commit();
+        }
+
+
+
+    <? endif; ?>
+
+
+    return $totalCount;
+
+
 <? else: ?>
-    //$errorMessage='db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery;
-<? endif ?>
-return false;
-}
+    <? $this->generatPdoBinds('$stmt'); ?>
+    <? $this->generatPdoFixStrBinds('$stmt'); ?>
 
+    $stmt_r = $stmt->execute();
+    if($stmt_r){
+    return $stmt->rowCount();
+    }
+    else {
 
+    <? if (!empty($this->error_log)): ?>
+        <?= $this->error_log ?>('db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery);
+    <? else: ?>
+        //$errorMessage='db error info:' . var_export($stmt->errorInfo(), true)." query:".$runQuery;
+    <? endif ?>
+    return false;
+    }
+
+<? endif; ?>
 }
 catch ( PDOException $x ) {
 <? if (!empty($this->error_log)): ?>
@@ -82,6 +123,10 @@ catch ( PDOException $x ) {
 <? else: ?>
     //$errorMessage='db error info:' . $x->getMessage()." query:".$runQuery;
 <? endif ?>
+<? if ($this->around_transaction): ?>
+    $dbh->rollBack();
+
+<? endif; ?>
 throw $x;
 }
 <?= $this->custom_tailer_code; ?>
