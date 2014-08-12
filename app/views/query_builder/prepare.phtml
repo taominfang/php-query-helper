@@ -1295,24 +1295,25 @@
     }
 
     function getVariableName(originalName) {
-        var words = originalName.replace(/\./g, '_').split('_');
-        var re = "";
-        for (var ind in words) {
-            var one = words[ind];
-            if (one.length === 0) {
-                continue;
-            }
-            if (re === "") {
-                re += one;
-            }
-            else {
-                re += one.substr(0, 1).toUpperCase();
-                if (re.length > 1) {
-                    re += one.substr(1).toLowerCase();
-                }
-            }
-        }
-        return re;
+        var words = originalName.replace(/\./g, '_');
+        return words;
+//        var re = "";
+//        for (var ind in words) {
+//            var one = words[ind];
+//            if (one.length === 0) {
+//                continue;
+//            }
+//            if (re === "") {
+//                re += one;
+//            }
+//            else {
+//                re += one.substr(0, 1).toUpperCase();
+//                if (re.length > 1) {
+//                    re += one.substr(1).toLowerCase();
+//                }
+//            }
+//        }
+//        return re;
     }
 </script>
 
