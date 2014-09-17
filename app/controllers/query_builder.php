@@ -237,6 +237,11 @@ class Query_builderController extends BasicController {
         $this->view->addInternalCss("logic_edit.css");
 
         $tableInfo = json_decode($_GET['tablesInfo'], true);
+        
+        if($tableInfo === NULL){
+           
+            throw new Exception("[{$_GET['tablesInfo']}] is not a json string");
+        }
 
         $db_tables = array();
         $this->openPDOdb();
@@ -245,10 +250,13 @@ class Query_builderController extends BasicController {
             throw new Exception("Open db fail");
         }
 
-
+       
         $savedHeader = "";
 
         foreach ($tableInfo as $db => $tables) {
+
+            
+
             $this->pdo_db->exec("use " . $db);
 
             $tabs = array();
@@ -277,6 +285,7 @@ class Query_builderController extends BasicController {
         $this->view->saved_header = $savedHeader;
 
         $_SESSION['db_tables'] = serialize($db_tables);
+        MLog::dExport($db_tables, 'talbes==============:');
     }
 
     public function create_pdo_connect_code() {
