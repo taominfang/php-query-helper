@@ -1049,7 +1049,13 @@ class Query_builderController extends BasicController {
         } else if ($sel === 'variable_array_value') {
 
             $variables[$v] = array('func_param' => true, 'bind_var' => false);
-            return "implode(','," . '$' . "{$v})";
+            
+            if(strpos($dataType, 'int')===false){
+                return "implode(','," . '$' . "{$v}_alias)";
+            }
+            else{
+                return "implode(','," . '$' . "{$v})";
+            }
         } else if ($sel === 'custom_value' || $sel === 'in_program_definitions') {
             return $v;
         } else {

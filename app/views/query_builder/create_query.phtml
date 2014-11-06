@@ -203,7 +203,7 @@ if (!empty($this->limit)) {
         return $re[0];
         }
         else {
-        return false;
+        return null;
         }
     <? else: ?>
         return $stmt->fetchAll();
