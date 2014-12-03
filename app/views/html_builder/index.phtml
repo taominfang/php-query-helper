@@ -1,0 +1,40 @@
+
+<? if (!empty($this->savedTemplates)): ?>
+
+    <ul>
+
+
+        <? foreach ($this->savedTemplates as $one=>$t): ?>
+            <li>
+                <a href="<?= $this->popUrl("html_builder/select_type?project={$t}") ?>"><?=$one?></a>
+            </li>
+        <? endforeach; ?>
+
+    </ul>
+<? endif; ?>
+
+<hr
+    >
+
+<h3>Create a new template</h3>
+
+<form action="<?= $this->popUrl('html_builder/new_template') ?>" method="POST">
+
+    <ul>
+        <li>
+            <span>Name:</span><input name="project">
+
+        </li>
+        <li>
+            <span>Description:</span><input name="desc">
+
+        </li>
+        <li>
+            <button type="submit">create</button>
+
+
+        </li>
+
+    </ul>
+
+</form>

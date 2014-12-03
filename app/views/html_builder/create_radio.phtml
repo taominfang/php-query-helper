@@ -1,0 +1,177 @@
+<style>
+    div{
+        margin-top: 10px;
+    }
+    .wrapper{
+        width: 50em;
+        height: 6em;
+    }
+
+    #radio_result{
+        width: 100em;
+        height: 60em;
+    }
+
+    .text_input{
+        width: 20em;
+    }
+    table, th, td {
+        border: 1px solid black;
+    }
+</style>
+<script type="text/javascript">
+    var tr_index=100;
+    $(document).ready(function () {
+        $('#create_bt').click(function () {
+
+            onCreate();
+        });
+
+
+        $('#add_radion_button').click(function () {
+
+            $('#radion_button_body').append($('#example_radion_button').html().replace(/index_position/g,tr_index++));
+            return false;
+        });
+        
+        $('.radio_button_del').live('click',function(){
+            $(this).parent().parent('tr').remove();
+            return false;
+        });
+        
+        $('.radion_id_auto_gen').live('click',function(){
+            var n=$('#radio_button_name').val();
+            var v=$(this).parent().parent('tr').find('.radio_button_value').first().val();
+            
+            if(n.length >0 && v.length>0){
+                $(this).parent().find('.radio_button_id').first().val(n+"_"+v);
+            }
+            
+            return false;
+            
+        });
+
+    });
+
+    function onCreate() {
+        
+        var bList=[];
+        $('#radion_button_body tr').each(function(){
+            var index=$(this).attr('id').replace(/radio_button_/g,'');
+            bList.push(index);
+            
+        });
+        
+        $('#radio_button_list').val(JSON.stringify(bList));
+        
+        var data = $('#form').serialize();
+
+        ajax_post(
+                "<?= $this->popUrl('html_builder/do_create_radio') ?>", //url
+                data, //data
+                'create_bt', //                click_button_id,
+                null, //        success_message_div_id,
+                null, //        success_message_class,
+                null, //        success_message,
+                function (reData) {
+                    $('#radio_result').val(reData);
+                }, //        successFunction,
+                null, //        error_message_div_id,
+                null, //        error_message_class,
+                null, //        error_message,
+                null, //        errorFunction,
+                null //        doneFunction
+                );
+    }
+</script>
+
+<form id="form">
+    <input type="hidden" name="radio_button_list" id="radio_button_list">
+    <div>
+        Radio wrapper header:
+
+        <br/><textarea class="wrapper"  name="radio_wrapper_header"><? $this->htmlShow("radio_wrapper_header") ?></textarea>
+    </div>
+
+    <div style="padding-left: 20px">
+        <div>
+
+
+
+            radio button wrapper header:
+            <br/><textarea class="wrapper"  name="radio_button_wrapper_header" ><? $this->htmlShow("radio_button_wrapper_header") ?></textarea>
+
+        </div>
+        <div>
+            <span>for all radio buttons </span><br/>
+            <div style="padding-left: 20px">
+                class=<input class="text_input"   type="text" name="radio_button_class" value="<? $this->htmlShow("radio_button_class") ?>"> <br/>
+
+                name=<input class="text_input"   type="text" id='radio_button_name' name="radio_button_name"  value="<? $this->htmlShow("radio_button_name") ?>"> <br/>
+                current value=<input class="text_input"   type="text" name="radio_button_current_value"  value="<? $this->htmlShow("radio_button_current_value") ?>"> <br/>
+
+
+            </div>
+
+            <p>
+            <table style="width: 800px;margin-bottom: 40px; border: 1px solid black;" >
+                <caption>Radio Buttons</caption>
+                <thead>
+                    <tr>
+                        <th ><button id='add_radion_button'>Add one Radio Button</button></th>
+                        <th colspan="3"></th>
+                    </tr>
+                    <tr>
+                        <th>Value</th>
+                        <th>Label</th>
+                        <th>ID </th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id='radion_button_body'>
+
+                </tbody>
+            </table>
+            <table style="display: none">
+                <tbody id="example_radion_button" >
+                    <tr id="radio_button_index_position">
+                        <td>
+                            <input name="radio_button_value_index_position" class='radio_button_value'>
+                        </td>
+                        <td>
+                            <input name="radio_button_label_index_position" class='radio_button_id'>
+                        </td>
+                        <td>
+                            <input name="radio_button_id_index_position" class='radio_button_id'><button class='radion_id_auto_gen'>Auto Generate From Name and Value</button>
+                        </td>
+                        <td>
+                            <button class='radio_button_del'>delete</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </p>
+
+        </div>
+
+
+
+        <div>
+            radio button wrapper tailer:
+            <br/><textarea class="wrapper"  name="radio_button_wrapper_tailer" ><? $this->htmlShow("radio_button_wrapper_tailer") ?></textarea>
+        </div>
+
+    </div>
+
+    <div>
+        Radio wrapper tailer:
+        <br/><textarea class="wrapper"  name="radio_wrapper_tailer" ><? $this->htmlShow("radio_wrapper_tailer") ?></textarea>
+    </div>
+</form>
+<div>
+    <button id="create_bt">Create</button>
+</div>
+
+<div>
+    <textarea id="radio_result"></textarea>
+</div>

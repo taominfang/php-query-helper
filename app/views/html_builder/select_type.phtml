@@ -1,0 +1,61 @@
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("button").click(function() {
+            var method = null;
+
+            $('.method').each(function() {
+                if ($(this).prop('checked')) {
+                    method = $(this).val();
+                }
+            });
+            if (method != null) {
+                $('#form').attr("action", "<?= $this->popUrl('html_builder/create_') ?>" + method);
+
+            }
+            else {
+                return false;
+            }
+        });
+    });
+</script>
+<form action="" id="form" target="_blank">
+
+
+    <ul>
+        <li>
+            <span>
+                general wrapper header:
+            </span>
+            <br/>
+            <textarea cols="100" rows="6" name="general_wrapper_header"><?= htmlspecialchars($this->general_wrapper_header) ?></textarea>
+        </li>
+        <li>
+            <span>
+                general wrapper tailer:
+            </span>
+            <br/>
+            <textarea cols="100" rows="6" name="general_wrapper_tailer"><?= htmlspecialchars($this->general_wrapper_tailer) ?></textarea>
+        </li>
+
+        <li>
+            <input name="type" class="method" value="text" type="radio">
+            <span> text input</span>
+        </li>
+        <li>
+            <input name="type"  class="method" value="password" type="radio">
+            <span> password input</span>
+        </li>
+        <li>
+            <input name="type"  class="method" value="radio" type="radio">
+            <span> radio </span>
+        </li>
+        <li>
+            <input name="type" class="method"  value="select" type="radio">
+            <span> select</span>
+        </li>
+    </ul>
+    <button type="submit"> Go</button>
+
+
+</form>

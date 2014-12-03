@@ -1,0 +1,10 @@
+<? $this->show("radio_wrapper_header"); ?>
+
+<? foreach ($this->radio_list as $one): ?>
+    <? $this->show("radio_button_wrapper_header"); ?>
+<input type="radio" class='<? $this->htmlShow('radio_button_class') ?>' name='<? $this->htmlShow('radio_button_name') ?>' value="<?= htmlspecialchars($one['val']) ?>" <? if (!empty($this->radio_button_current_value)): ?><?= '<' . '? if("' ?><?if($this->current_value_is_variable):?>{<?  endif;?><?$this->show(radio_button_current_value);?><?if($this->current_value_is_variable):?>}<?  endif;?>"==='<?=$one['val']?>'<?= '):?' . ">checked='checked'" ?><?= '<' . '?  endif;' ?><?= '?' . '>' ?><? endif; ?> /><span><?= htmlspecialchars($one['label']) ?></span>
+    <? $this->show("radio_button_wrapper_tailer"); ?>
+<? endforeach; ?>
+
+
+<? $this->show("radio_wrapper_tailer"); ?>

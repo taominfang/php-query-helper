@@ -1,0 +1,145 @@
+<style>
+    div{
+        margin-top: 10px;
+    }
+    .wrapper{
+        width: 50em;
+        height: 6em;
+    }
+
+    #select_result{
+        width: 100em;
+        height: 60em;
+    }
+
+    .text_input{
+        width: 20em;
+    }
+</style>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#create_bt').click(function () {
+
+            onCreate();
+        });
+
+        $('#option_label_copy_from_foreach_value_with_escape').click(function () {
+            $('#option_lable').val("<" + "?= htmlspecialchars(" + $('#foreach_as_value').val() + "); ?" + ">");
+            return false;
+        });
+
+        $('#option_label_copy_from_foreach_value').click(function () {
+            $('#option_lable').val("<" + "?= " + $('#foreach_as_value').val() + "; ?" + ">");
+            return false;
+        });
+
+    });
+
+    function onCreate() {
+        var data = $('#form').serialize();
+
+        ajax_post(
+                "<?= $this->popUrl('html_builder/do_create_select') ?>", //url
+                data, //data
+                'create_bt', //                click_button_id,
+                null, //        success_message_div_id,
+                null, //        success_message_class,
+                null, //        success_message,
+                function (reData) {
+                    $('#select_result').val(reData);
+                }, //        successFunction,
+                null, //        error_message_div_id,
+                null, //        error_message_class,
+                null, //        error_message,
+                null, //        errorFunction,
+                null //        doneFunction
+                );
+    }
+</script>
+
+<form id="form">
+    <div>
+        Select wrapper header:
+
+        <br/><textarea class="wrapper"  name="select_wrapper_header"><? $this->htmlShow("select_wrapper_header") ?></textarea>
+    </div>
+    <div>
+        &lt;select  
+        <div style="padding-left: 20px">
+            class=<input class="text_input"   type="text" name="select_class" value="<? $this->htmlShow("select_class") ?>"> <br/>
+            name=<input class="text_input"   type="text" name="select_name"  value="<? $this->htmlShow("select_name") ?>"> <br/>
+            id=<input class="text_input"   type="text" name="select_id"  value="<? $this->htmlShow("select_id") ?>"> <br/>
+            (same as name <input type="checkbox" name="select_id_as_name"  value="1" <? if (!empty($this->select_id_as_name)): ?>checked="checked"><? endif; ?>)  <br/>
+            value=<input class="text_input"   type="text" name="select_value"  value="<? $this->htmlShow("select_value") ?>">  <br/>
+        </div> 
+        &gt;
+    </div>
+    <div style="padding-left: 20px">
+        <div>
+
+            foreach( <input class="text_input"   type="text" name="select_from_variable"  value="<? $this->htmlShow("select_from_variable") ?>"> 
+            as <input class="text_input"   type="text" name="foreach_as_key" value="<? $this->htmlShow("foreach_as_key") ?>"> =&gt; 
+            <input class="text_input"   type="text" name="foreach_as_value" id='foreach_as_value' value="<? $this->htmlShow("foreach_as_value") ?>"> ):
+            <div></div>
+
+            option wrapper header:
+            <br/><textarea class="wrapper"  name="option_wrapper_header" ><? $this->htmlShow("option_wrapper_header") ?></textarea>
+
+        </div>
+        <div>
+            &lt;option <br/>
+            <div style="padding-left: 20px">
+                class=<input class="text_input"   type="text" name="option_class" value="<? $this->htmlShow("option_class") ?>"> <br/>
+
+
+                id=<input class="text_input"   type="text" name="option_id"  value="<? $this->htmlShow("option_id") ?>"> <br/>
+
+                name=<input class="text_input"   type="text" name="option_name"  value="<? $this->htmlShow("option_name") ?>"> <br/>
+
+                (same as id <input type="checkbox" name="option_name_as_id"  value="1" <? if (!empty($this->option_name_as_id)): ?>checked="checked"><? endif; ?>)  <br/>
+
+                value=<input class="text_input"   type="text" name="option_value" value="<? $this->htmlShow("option_value") ?>">  <br/>
+            </div>
+            &gt;  
+        </div>
+
+        <div style="padding-left: 20px">
+            How to show the option lable :<input class="text_input"   type="text" name="option_lable" id="option_lable" value="<? $this->htmlShow("option_lable") ?>"> 
+            <button id="option_label_copy_from_foreach_value">Copy from foreach as value</button>
+            <button id="option_label_copy_from_foreach_value_with_escape">Copy from foreach as value with escape func</button> 
+        </div>
+
+        <div style="padding-left: 20px">
+            selected :
+            <input class="text_input"   type="text" name="selected_left" id="selected_left" value="<? $this->htmlShow("selected_left") ?>"> 
+            <input class="text_input"   type="text" name="selected_right" id="selected_right" value="<? $this->htmlShow("selected_right") ?>"> 
+            Is number<input class="text_input"   type="checkbox" name="selected_is_number" id="selected_is_number" value="1"> 
+            
+            
+        </div>
+        <div>
+            &lt;/option    &gt;
+        </div>
+        <div>
+            option wrapper tailer:
+            <br/><textarea class="wrapper"  name="option_wrapper_tailer" ><? $this->htmlShow("option_wrapper_tailer") ?></textarea>
+        </div>
+        <div>
+            endforeach;
+        </div>
+    </div>
+    <div>
+        &lt;/select&gt;
+    </div>
+    <div>
+        Select wrapper tailer:
+        <br/><textarea class="wrapper"  name="select_wrapper_tailer" ><? $this->htmlShow("select_wrapper_tailer") ?></textarea>
+    </div>
+</form>
+<div>
+    <button id="create_bt">Create</button>
+</div>
+
+<div>
+    <textarea id="select_result"></textarea>
+</div>

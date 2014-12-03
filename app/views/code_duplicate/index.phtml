@@ -1,0 +1,89 @@
+<script type="text/javascript" >
+    $(document).ready(function() {
+
+
+        $('.add').live('click',function() {
+            $(this).parent().append("<li><input type='text' > <button class='add'>Add</button> <button class='delete'>Delete</button></li>");
+        });
+
+        $('.delete').live('click',function() {
+
+            var c = 0;
+
+            $('#replace_list').find('li').each(function() {
+                c++;
+            });
+
+            if (c > 1) {
+
+                $(this).parent().remove();
+            }
+        });
+        
+        
+        
+        $('#duplicate').click(function(){
+            
+            var oStr=$('#source').val();
+            
+            var tStr="";
+            
+            var rStr=$('#from').val();
+            var reg = new RegExp(rStr, 'g');
+            
+            $('#replace_list').find('li').each(function() {
+                var eStr=$(this).find('input').first().val();
+                
+                var newStr=oStr.replace(reg,eStr);
+                
+                tStr+=newStr;
+                tStr+="\n";
+            });
+            
+            $('#target').val(tStr);
+            return false;
+        });
+        
+    });
+</script>
+
+<style>
+    textarea{
+        width: 80em;
+        height: 20em;
+    }
+</style>
+
+Source:
+
+<textarea id='source'></textarea>
+<br/>
+<br/><br/>
+From:<input id="from" type="text">
+
+<br/>
+<br/>
+To:
+<br/>
+
+<div id="replace_list">
+
+    <ul id="replace_list">
+        <li><input type='text' > <button class='add'>Add</button> <button class='delete'>Delete</button></li>
+    </ul>
+
+</div>
+
+<br/>
+
+<button id="duplicate">Duplicate</button>
+
+<br/>
+<br/>
+Target:
+
+<textarea id='target'></textarea>
+
+
+
+

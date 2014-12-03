@@ -1,0 +1,55 @@
+<? $this->show("select_wrapper_header"); ?>
+
+<select <? if (!empty($this->select_class)): ?>class="<? $this->show("select_class"); ?>"<? endif; ?> <? if (!empty($this->select_name)): ?> name="<? $this->show("select_name"); ?>"<? endif; ?> <? if (!empty($this->select_id)): ?> id="<? $this->show("select_id"); ?>" <? else: ?> <? if (!empty($this->select_id_as_name) && !empty($this->select_name)): ?> id="<? $this->show("select_name"); ?>"<? endif; ?> <? endif; ?> <? if (!empty($this->select_value)): ?> value='<? $this->show("select_value"); ?>'<? endif; ?>>
+    <? if (!empty($this->select_from_variable)): ?>
+        <?= "<?foreach(" ?><? $this->show("select_from_variable"); ?> as <? if (!empty($this->foreach_as_key)): ?><? $this->show("foreach_as_key"); ?> => <? $this->show("foreach_as_value"); ?><? else: ?><? $this->show("foreach_as_value"); ?><? endif; ?><?= "):?>" ?>
+    <? endif; ?>
+
+    <? $this->show("option_wrapper_header"); ?> 
+
+    <option <? if (!empty($this->option_class)): ?>class='<? $this->show("option_class"); ?>'<? endif;
+    ?> <? if (!empty($this->option_id)): ?> id="<? $this->show("option_id"); ?>"<? endif;
+    ?> <? if (!empty($this->option_name)): ?> name="<? $this->show("option_id"); ?>" <? else:
+        ?> <? if (!empty($this->option_name_as_id) && !empty($this->option_id)): ?> name="<? $this->show("option_id"); ?>"<? endif;
+        ?> <? endif;
+    ?> <? if (!empty($this->option_value)): ?> value='<? $this->show("option_value"); ?>'<? endif;
+    ?> <? if (!empty($this->selected_left)){
+        echo ' <? if(';
+        if(empty($this->selected_right)){
+            echo "!empty({$this->selected_left})";
+        }
+        else{
+            echo " isset({$this->selected_left}) && ";
+        
+            if(empty($this->selected_is_number)){
+                echo "{$this->selected_left} ===";
+                
+            }
+            else{
+                echo "intval({$this->selected_left}) ===";
+            }
+            
+            if(!empty($this->selected_is_number) || strpos($this->selected_right, '$')===0){
+                //varialbe
+                echo "{$this->selected_right}";
+            }
+            else {
+                 echo "'{$this->selected_right}'";
+            }
+            
+            
+            
+        }
+        echo '): ?>selected="selected"<? endif; ?>';
+    };
+    ?>><? $this->show("option_lable"); ?></option>
+
+    <? $this->show("option_wrapper_tailer"); ?>
+    <? if (!empty($this->select_from_variable)): ?>
+
+        <?= "<? endforeach; ?>" ?>
+    <? endif; ?>
+
+</select>
+
+<? $this->show("select_wrapper_tailer"); ?>
