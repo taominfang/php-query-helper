@@ -2,7 +2,7 @@
 
 include dirname(__FILE__) . '/../models/project.php';
 
-class Query_builderController extends BasicController {
+class Query_builderController extends GeneralWrapper {
 
     protected $view_class = "view_query_builder";
 
@@ -18,19 +18,7 @@ class Query_builderController extends BasicController {
         header('Content-Type:text/html; charset=utf-8');
     }
 
-    protected $project_name = null;
-    protected $project_index = null;
-    protected $project_db_file_path = null;
-    protected $project_db = null;
     protected $pdo_db = null;
-
-    protected function openProjectDb($pName = '') {
-        $this->fetchProject($pName);
-
-        if ($this->project_db_file_path !== null) {
-            $this->project_db = new Project($this->project_db_file_path);
-        }
-    }
 
     protected function openPDOdb($pName = '') {
         $this->openProjectDb($pName);
@@ -49,29 +37,6 @@ class Query_builderController extends BasicController {
                 MLog::e($exc->getTraceAsString());
                 $this->pdo_db = null;
             }
-        }
-    }
-
-    protected function fetchProject($pName = '') {
-
-        if (empty($pName)) {
-            $this->project_index = $_SESSION['project_index'];
-
-            if (!empty($this->project_index)) {
-                $this->project_db_file_path = __LOCAL_DB_FOLDER__ . '/' . $this->project_index . '.db';
-            }
-        } else if (!empty($_GET[$pName])) {
-            $this->project_name = $_GET[$pName];
-
-            $ldb = new FileDB(__LOCAL_DB_FOLDER__ . '/index.db');
-
-
-            $this->project_index = $ldb->fetch($this->project_name);
-
-            if ($this->project_index !== false) {
-                $this->project_db_file_path = __LOCAL_DB_FOLDER__ . '/' . $this->project_index . '.db';
-            }
-            $ldb->close();
         }
     }
 
@@ -95,6 +60,7 @@ class Query_builderController extends BasicController {
         $this->view->project = new Project();
         $this->view->project_name = "";
         $this->fetchProject('load');
+
 
         if ($this->project_db_file_path !== null) {
 
@@ -143,7 +109,7 @@ class Query_builderController extends BasicController {
 
         if ($this->pdo_db === null) {
             if ($this->project_name !== null) {
-                $this->redirect($this->view->popUrl('query_builder/index?load=') . htmlentities($this->project_name));
+                $this->redirect($this->view->popUrl('query_builder/index?load=') . htmlspecialchars($this->project_name));
             } else {
                 $this->redirect($this->view->popUrl('query_builder/'));
             }
@@ -237,9 +203,9 @@ class Query_builderController extends BasicController {
         $this->view->addInternalCss("logic_edit.css");
 
         $tableInfo = json_decode($_GET['tablesInfo'], true);
-        
-        if($tableInfo === NULL){
-           
+
+        if ($tableInfo === NULL) {
+
             throw new Exception("[{$_GET['tablesInfo']}] is not a json string");
         }
 
@@ -250,12 +216,12 @@ class Query_builderController extends BasicController {
             throw new Exception("Open db fail");
         }
 
-       
+
         $savedHeader = "";
 
         foreach ($tableInfo as $db => $tables) {
 
-            
+
 
             $this->pdo_db->exec("use " . $db);
 
@@ -355,6 +321,10 @@ class Query_builderController extends BasicController {
         $tailer = $_POST['create_definitions_tailer'];
         $this->set('header', $header);
         $this->set('tailer', $tailer);
+
+        $this->set('class_name', $_POST['create_definitions_class_name']);
+        $this->set('map_name', $_POST['create_definitions_map_name']);
+
         $this->saveGlobalSetting();
         $this->saveSpecialSetting('definition', 'general', array('header' => $header, 'tailer' => $tailer));
     }
@@ -1049,11 +1019,10 @@ class Query_builderController extends BasicController {
         } else if ($sel === 'variable_array_value') {
 
             $variables[$v] = array('func_param' => true, 'bind_var' => false);
-            
-            if(strpos($dataType, 'int')===false){
+
+            if (strpos($dataType, 'int') === false) {
                 return "implode(','," . '$' . "{$v}_alias)";
-            }
-            else{
+            } else {
                 return "implode(','," . '$' . "{$v})";
             }
         } else if ($sel === 'custom_value' || $sel === 'in_program_definitions') {
@@ -1067,7 +1036,7 @@ class Query_builderController extends BasicController {
             if (empty($tableAlias)) {
                 return "`{$columnInfo['name']}`";
             } else {
-                return "{$tableAlias}.`{$columnInfo['name']}`";
+                return "`{$tableAlias}`.`{$columnInfo['name']}`";
             }
         }
     }

@@ -1,5 +1,21 @@
-<?if(empty($this->definition)):?>
-There is no data
-<?else: foreach($this->definition as $one):?>
-const <?=$this->header?><?=  strtoupper(str_replace(' ', '_', $one['name']))?><?=$this->tailer?>=<?=$one['id']?>;
-<?endforeach; endif; ?>
+<? if (empty($this->definition)): ?>
+    There is no data
+<? else: ?>
+
+    <? foreach ($this->definition as $one): ?>
+        const <?= $this->header ?><?= strtoupper(str_replace(' ', '_', $one['name'])) ?><?= $this->tailer ?>=<?= $one['id'] ?>;
+    <? endforeach; ?>
+
+    <? if (!empty($this->class_name) && !empty($this->map_name)): ?>
+        <?$first=true;?>
+        public static $<?=$this->map_name?>=array(
+        <? foreach ($this->definition as $one): ?>
+            <?if(!$first){echo ",";}?><?=$this->class_name?>::<?= $this->header ?><?= strtoupper(str_replace(' ', '_', $one['name'])) ?><?= $this->tailer ?>=>'<?= $one['name'] ?>'
+            
+            <?$first=false;?>
+        <? endforeach; ?>
+        );
+    <? endif; ?>
+<? endif; ?>
+
+

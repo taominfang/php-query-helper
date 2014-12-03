@@ -81,6 +81,7 @@ class Project extends FileDB {
     function set($key, $value) {
         $this->setting[$key] = $value;
 
+        
         $this->save('setting', serialize($this->setting));
     }
 

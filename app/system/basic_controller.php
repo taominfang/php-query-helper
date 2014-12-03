@@ -56,7 +56,7 @@ class BasicController {
     }
 
     public function set($pName, $pValue) {
-
+ MLog::d("---------set {$pName}  to [{$pValue}]");
         $this->view->set($pName, $pValue);
     }
 

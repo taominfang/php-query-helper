@@ -8,7 +8,7 @@
 
 class view {
 
-    public $uri_header=__PROJECT_HEADER__;
+    public $uri_header = __PROJECT_HEADER__;
     public $title = "Unknow Title";
     public $layout = "default.phtml";
     public $template = "";
@@ -20,30 +20,27 @@ class view {
 
     public function set($variableName, $value) {
         $this->{$variableName} = $value;
-
-
     }
 
-    public function popUrl($rela){
-        return '/'.__PROJECT_HEADER__.$rela;
+    public function popUrl($rela) {
+        return '/' . __PROJECT_HEADER__ . $rela;
     }
 
-        public function addInternalJs($path){
-        $this->script_array[]='/'.__PROJECT_HEADER__.'js/'.$path;
-    }
-    public function addExternalJs($path){
-        $this->script_array[]=$path;
+    public function addInternalJs($path) {
+        $this->script_array[] = '/' . __PROJECT_HEADER__ . 'js/' . $path;
     }
 
-   public function addInternalCss($path){
-        $this->style_array[]='/'.__PROJECT_HEADER__.'css/'.$path;
-    }
-    public function addExternalCss($path){
-        $this->styles_array[]=$path;
+    public function addExternalJs($path) {
+        $this->script_array[] = $path;
     }
 
+    public function addInternalCss($path) {
+        $this->style_array[] = '/' . __PROJECT_HEADER__ . 'css/' . $path;
+    }
 
-
+    public function addExternalCss($path) {
+        $this->styles_array[] = $path;
+    }
 
     public function assign($variableName, $value) {
         $this->set($variableName, $value);
@@ -67,15 +64,13 @@ class view {
 
         $templateFile = __PROJECT_ROOT__ . '/views/' . $this->template;
         if (!is_file($templateFile)) {
-        MLog::e("{$templateFile} is not a file");
+            MLog::e("{$templateFile} is not a file");
             throw new Exception("Template file is not existent:" + $this->template);
         }
         ob_start();
         include $templateFile;
         $this->content = ob_get_contents();
         ob_end_clean();
-
-
     }
 
     public function rendering() {
@@ -91,10 +86,28 @@ class view {
         }
 
         include __PROJECT_ROOT__ . '/layouts/' . $this->layout;
-
-
     }
 
-    
+    public function htmlShow($memberName) {
+        if (!empty($memberName)) {
+
+            
+            if (isset($this->{$memberName})) {
+
+                echo htmlspecialchars($this->{$memberName});
+            }
+        }
+    }
+
+    public function show($memberName) {
+        if (!empty($memberName)) {
+
+            MLog::d(":::'{$memberName}',");
+            if (isset($this->{$memberName})) {
+
+                echo $this->{$memberName};
+            }
+        }
+    }
 
 }

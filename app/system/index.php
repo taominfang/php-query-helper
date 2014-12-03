@@ -1,4 +1,5 @@
 <?php
+
 spl_autoload_register('my_autoloader');
 $currentDir = dirname(__FILE__);
 include_once $currentDir . '/function.php';
@@ -86,9 +87,8 @@ $viewClass = $controller->getViewClass();
 if ($viewClass === null) {
 
     $view = new view();
-}
-else{
-    $view= new $viewClass;
+} else {
+    $view = new $viewClass;
 }
 
 $controller->setView($view);
@@ -151,17 +151,26 @@ function my_autoloader($class) {
         }
     }
 
-    error_log("try to load:{$class}");
 
     if (strpos($class, "view_") === 0) {
         $viewClassFile = realpath(dirname(__FILE__)) . '/../views/containers/' . $class . '.php';
         if (is_file($viewClassFile)) {
             include_once $viewClassFile;
             return;
+        } else {
+            error_log("{$viewClassFile} is not a file");
         }
-        else{
+    }
+
+    if (strpos($class, "Wrapper") !== false) {
+        $viewClassFile = realpath(dirname(__FILE__)) . '/../extends/wrappers/' . $class . '.php';
+        if (is_file($viewClassFile)) {
+            include_once $viewClassFile;
+            return;
+        } else {
             error_log("{$viewClassFile} is not a file");
         }
     }
 }
+
 ?>

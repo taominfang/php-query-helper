@@ -132,7 +132,15 @@ $stmt = $dbh->prepare($runQuery);
     $insertIds[]=$dbh->lastInsertId ();
     } else {
 
-    error_log('db error info:' . var_export($stmt->errorInfo(), true) . " query:" . $runQuery);
+    $errorMessage='db error info:' . var_export($stmt->errorInfo(), true) . " query:" . $runQuery;
+    
+    <? if (!empty($this->error_log)): ?>
+        <?= $this->error_log ?>($errorMessage);
+    
+        
+    <? endif ?>
+        throw new Exception($errorMessage);
+    
     <? if ($this->around_transaction): ?>
         $errorFlag = true;
 

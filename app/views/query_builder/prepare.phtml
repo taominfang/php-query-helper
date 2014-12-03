@@ -455,7 +455,7 @@
 
             var aliasVa = text.replace(/\./g, "_");
 
-            var input = "<input type='text' id='column_alias_" + one + "' value='" + aliasVa + "'>";
+            var input = "<input type='text' size='60' id='column_alias_" + one + "' value='" + aliasVa + "'>";
 
             html += input;
             html += "<span>,</span>";
@@ -1695,6 +1695,10 @@ Action:
 
             Header: <input class="create_definitions_header" name="create_definitions_header" id="create_definitions_header" value="" type="text"><br/>
             Tailer: <input class="create_definitions_tailer" name="create_definitions_tailer" id="create_definitions_tailer" value="" type="text"><br/>
+            Class Name (Fill this and following map name, if you want generate id=>name Map): 
+            <input class="create_definitions_class_name" name="create_definitions_class_name" id="create_definitions_class_name" value="" type="text" size="50"><br/>
+            Map Name (if you want generate id=>name Map): 
+            <input class="create_definitions_map_name" name="create_definitions_map_name" id="create_definitions_map_name" value="" type="text" size="50"><br/>
 
 
         </form>
