@@ -75,6 +75,13 @@
             create_pdo();
             return false;
         });
+        
+        $('.query_table_alias').live("change",function(){
+            var id=$(this).attr('id').replace(/query_table_alias_id_/g,'');
+            if(typeof query_cache_data.line_id_table_column_map[id] !== "undefined"){
+                delete  query_cache_data.line_id_table_column_map[id];
+            }
+        });
 
         loadSetting();
 
@@ -1579,6 +1586,7 @@ Action:
             Update Function Name:<input class="update_name" name="update_name" value="" type="text">
 
             <input type="checkbox" id="group_update" name='group_update'  value="1">Group Update
+            <input type="checkbox" id="" name='auto_compatiable'  value="1">Auto Compatiable
             <input type="checkbox" id="around_transaction" name='around_transaction'  value="1">Around Transaction
 
         </form>
@@ -1606,6 +1614,7 @@ Action:
             <input type="checkbox" name='insert_return_last_id'  checked="checked" value="1">Return Last ID
             <input type="checkbox" name='insert_update_method'   value="1">Insert .. on duplicate update method
             <input type="checkbox" id="group_update" name='group_update'  value="1">Group Update
+            <input type="checkbox" id="" name='auto_compatiable'  value="1">Auto Compatiable
             <input type="checkbox" id="around_transaction" name='around_transaction'  value="1">Around Transaction
         </form>
         <button id="create_insert_bt">Create Insert</button>

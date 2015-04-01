@@ -3,16 +3,15 @@ $engine='<?= $this->engine ?>';
 $host='<?= $this->host ?>';
 $port='<?= $this->port ?>';
 $user='<?= $this->user ?>';
+$dbname='<?if(!empty($this->dbname)):?><?=$this->dbname?><?endif?>';
 $password='<?= $this->password ?>';
 
 
 
 
-$dsn = "{$engine}:host={$host};port={$port};dbname=";
+$dsn = "{$engine}:host={$host};port={$port};dbname={$dbname}";
 
-<?if(!empty($this->dbname)):?>
-$dsn.="<?=$this->dbname?>";
-<?endif?>
+
 $initPDO=array();
 //$dsn.=';charset=UTF8';
 

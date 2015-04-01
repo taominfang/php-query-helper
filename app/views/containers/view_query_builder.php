@@ -16,7 +16,10 @@ class view_query_builder extends view {
         'mediumint' => 'PDO::PARAM_INT'
     );
 
-    public function generatPdoBinds($smtpName,$group=false) {
+    public function generatPdoBinds($smtpName, $group = false) {
+
+
+
         foreach ($this->variables as $name => $setting) {
             if (!empty($setting['bind_var'])) {
 
@@ -31,15 +34,17 @@ class view_query_builder extends view {
                     }
                 }
 
-               
 
-                if($group){
-                    echo $smtpName . '->bindParam(\':' . $name . '\',$one["'.$name.'"]'  . ",{$pType});\n";
-                }
-                else{
+
+                if ($group) {
+                    echo $smtpName . '->bindParam(\':' . $name . '\',$one["' . $name . '"]' . ",{$pType});\n";
+                } else if (isset ($this->auto_compatiable) && $this->auto_compatiable) {
+                    echo "if (isset(\$autoCompatiableValues['{$name}']])){\n";
+                    echo $smtpName . '->bindParam(\':' . $name . "',\$autoCompatiableValues['{$name}'],{$pType});\n";
+                    echo "}\n";
+                } else {
                     echo $smtpName . '->bindParam(\':' . $name . '\',$' . $name . ",{$pType});\n";
                 }
-
             }
         }
     }
@@ -60,13 +65,31 @@ class view_query_builder extends view {
                     }
                 }
                 if ($pType === 'PDO::PARAM_INT') {
-                     echo '$temp_fix_value_for_bind=' . $one['value']. ";\n";
+                    echo '$temp_fix_value_for_bind=' . $one['value'] . ";\n";
                 } else {
                     echo '$temp_fix_value_for_bind=' . "'" . str_replace("'", "\\" . "'", $one['value']) . "';\n";
                 }
                 echo $smtpName . '->bindParam(\':fix_' . $one['column_name'] . '\',$temp_fix_value_for_bind, ' . "{$pType});\n";
             }
         }
+    }
+
+    public function mImplode($firstStr, $variables, $value) {
+
+
+        $re = "if({!$firstStr}){\n";
+        foreach ($variables as $one) {
+            $re.="{$one}.=\", {$value}\";\n";
+        }
+        $re.="}\n";
+
+        $re.="else{\n";
+        foreach ($variables as $one) {
+            $re.="{$one}.=\"{$value}\";\n";
+        }
+        $re.="{$firstStr}=false;\n";
+        $re.="}\n";
+        return $re;
     }
 
 }

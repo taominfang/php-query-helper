@@ -755,6 +755,7 @@ class Query_builderController extends GeneralWrapper {
         $this->set('variables', $variables);
 
         $this->set('group_update', !empty($_POST['group_update']));
+        $this->set('auto_compatiable', !empty($_POST['auto_compatiable']));
         $this->set('around_transaction', !empty($_POST['around_transaction']));
 
 

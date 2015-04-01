@@ -1,4 +1,39 @@
-public function <?= $this->function_name ?>($dbh<? if ($this->group_update): ?>,$insertValues<? else: ?><?
+<? if ($this->auto_compatiable): ?>
+    /* Exmaple of autoCompatiableValues
+    $autoCompatiableValues=array(
+    <?
+    echo "\n";
+    $f = true;
+
+    error_log(var_export($this->columns, true));
+
+    foreach ($this->columns as $one) {
+        if ($one['type'] === 'variable') {
+            if (!$f) {
+                echo ",";
+            }
+            echo "'{$one['value']}' => ";
+
+            if (strpos($one['bind_type'], "char") !==false) {
+                echo "\"string_value\" ";
+            } elseif (strpos($one['bind_type'], "tinyint(1)") !==false) {
+                echo "true";
+            } elseif (strpos($one['bind_type'], "int") !==false) {
+                echo 1;
+            } else {
+                echo '"value"';
+            }
+            echo "   //{$one['bind_type']} \n";
+
+            $f = false;
+        }
+    }
+    ?>
+    );
+    */
+<? endif ?>
+
+public function <?= $this->function_name ?>($dbh<? if ($this->group_update): ?>,$insertValues<? elseif ($this->auto_compatiable): ?>, $autoCompatiableValues <? else: ?><?
     foreach ($this->variables as $name => $setting) {
         if (!empty($setting['func_param'])) {
             echo ', $' . $name;
@@ -31,32 +66,59 @@ foreach ($this->frome_tables as $one) {
 ?>
 
 
+
 $columns = "(";
 $values = " values( ";
+
+
 <?
-$first = true;
-foreach ($this->columns as $one) {
-    if (!$first) {
-        echo '$' . "columns .=',`{$one['column_name']}`';\n";
-        echo '$' . "values .=',';";
-    } else {
-        echo '$' . "columns .=' `{$one['column_name']}`';\n";
+if ($this->auto_compatiable) {
+
+    echo "\$_columns=array();\n";
+    echo "\$_values=array();\n";
+    foreach ($this->columns as $one) {
+
+        if ($one['type'] === 'variable') {
+            echo "if (isset(\$autoCompatiableValues['{$one['value']}'])){\n";
+            echo "\$_columns[]=\"`{$one['column_name']}`\";\n";
+            echo "\$_values[]=\":{$one['value']}\";\n";
+            echo "}\n";
+        } else if ($one['type'] === 'pure') {
+            echo "\$_columns[]=\"`{$one['column_name']}`\";\n";
+            echo "\$_values[]=\":fix_{$one['column_name']}\";\n";
+        } else if ($one['type'] === 'function') {
+            echo "\$_columns[]=\"`{$one['column_name']}`\";\n";
+            echo "\$_values[]=\":{$one['value']}\";\n";
+        }
+        echo "\n";
     }
-    $first = false;
+
+    echo '$columns .= implode(",",$_columns);' . "\n";
+    echo '$values .=  implode(",",$_values);' . "\n";
+} else {
+    $first = true;
+    foreach ($this->columns as $one) {
+        if (!$first) {
+            echo '$' . "columns .=',`{$one['column_name']}`';\n";
+            echo '$' . "values .=',';";
+        } else {
+            echo '$' . "columns .=' `{$one['column_name']}`';\n";
+        }
+        $first = false;
 
 
 
 
-    if ($one['type'] === 'variable') {
-        echo '$' . "values .=':{$one['value']}';\n";
-    } else if ($one['type'] === 'pure') {
-        echo '$' . "values .=':fix_{$one['column_name']}';\n";
-    } else if ($one['type'] === 'function') {
-        echo '$' . "values .='{$one['value']}';\n";
+        if ($one['type'] === 'variable') {
+            echo '$' . "values .=':{$one['value']}';\n";
+        } else if ($one['type'] === 'pure') {
+            echo '$' . "values .=':fix_{$one['column_name']}';\n";
+        } else if ($one['type'] === 'function') {
+            echo '$' . "values .='{$one['value']}';\n";
+        }
+        echo "\n";
     }
-    echo "\n";
 }
-
 echo '$columns .= ")";' . "\n";
 echo '$values .= ") ";' . "\n";
 
@@ -133,14 +195,14 @@ $stmt = $dbh->prepare($runQuery);
     } else {
 
     $errorMessage='db error info:' . var_export($stmt->errorInfo(), true) . " query:" . $runQuery;
-    
+
     <? if (!empty($this->error_log)): ?>
         <?= $this->error_log ?>($errorMessage);
-    
-        
+
+
     <? endif ?>
-        throw new Exception($errorMessage);
-    
+    throw new Exception($errorMessage);
+
     <? if ($this->around_transaction): ?>
         $errorFlag = true;
 
