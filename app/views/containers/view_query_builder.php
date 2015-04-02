@@ -19,7 +19,7 @@ class view_query_builder extends view {
     public function generatPdoBinds($smtpName, $group = false) {
 
 
-
+        echo "\n";
         foreach ($this->variables as $name => $setting) {
             if (!empty($setting['bind_var'])) {
 
@@ -38,10 +38,17 @@ class view_query_builder extends view {
 
                 if ($group) {
                     echo $smtpName . '->bindParam(\':' . $name . '\',$one["' . $name . '"]' . ",{$pType});\n";
-                } else if (isset ($this->auto_compatiable) && $this->auto_compatiable) {
-                    echo "if (isset(\$autoCompatiableValues['{$name}']])){\n";
-                    echo $smtpName . '->bindParam(\':' . $name . "',\$autoCompatiableValues['{$name}'],{$pType});\n";
-                    echo "}\n";
+                } else if (isset($this->auto_compatiable) && $this->auto_compatiable) {
+                    if (!empty($setting['is_column'])) {
+
+                        echo "if (isset(\$autoCompatiableValues['{$name}'])){\n";
+                        echo $smtpName . '->bindParam(\':' . $name . "',\$autoCompatiableValues['{$name}'],{$pType});\n";
+                        echo "}\n";
+                    }
+
+                    if (!empty($setting['where_variable'])) {
+                        echo $smtpName . '->bindParam(\':' . $name . '\',$' . $name . ",{$pType});\n";
+                    }
                 } else {
                     echo $smtpName . '->bindParam(\':' . $name . '\',$' . $name . ",{$pType});\n";
                 }

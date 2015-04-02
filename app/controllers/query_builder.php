@@ -557,7 +557,7 @@ class Query_builderController extends GeneralWrapper {
 
             if ($detail['type'] === 'variable') {
 
-                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $detail['data_type']);
+                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $detail['data_type'],"is_column"=>true);
             }
         }
 
@@ -568,8 +568,9 @@ class Query_builderController extends GeneralWrapper {
         $this->set('variables', $variables);
 
         $this->set('group_update', !empty($_POST['group_update']));
+        $this->set('auto_compatiable', !empty($_POST['auto_compatiable']));
         $this->set('around_transaction', !empty($_POST['around_transaction']));
-
+        
 
         //MLog::dExport($_POST);
 //        MLog::dExport($columns, 'columns');
@@ -744,7 +745,7 @@ class Query_builderController extends GeneralWrapper {
 
             if ($detail['type'] === 'variable') {
 
-                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $detail['data_type']);
+                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $detail['data_type'],"is_column"=>true);
             }
         }
 
@@ -1015,7 +1016,7 @@ class Query_builderController extends GeneralWrapper {
             return '???';
         }
         if ($sel === "variable_value") {
-            $variables[$v] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $dataType);
+            $variables[$v] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $dataType,'where_variable'=>true);
             return ':' . $v;
         } else if ($sel === 'variable_array_value') {
 

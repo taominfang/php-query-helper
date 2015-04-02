@@ -1,4 +1,45 @@
-public function <?= $this->function_name ?>($dbh<? if ($this->group_update): ?>,$updateValues<? else: ?><?
+<? if ($this->auto_compatiable): ?>
+    /* Exmaple of autoCompatiableValues
+    $autoCompatiableValues=array(
+    <?
+    echo "\n";
+    $f = true;
+
+    error_log(var_export($this->columns, true));
+
+    foreach ($this->columns as $one) {
+        if ($one['type'] === 'variable') {
+            if (!$f) {
+                echo ",";
+            }
+            echo "'{$one['value']}' => ";
+
+            if (strpos($one['bind_type'], "char") !== false) {
+                echo "\"string_value\" ";
+            } elseif (strpos($one['bind_type'], "tinyint(1)") !== false) {
+                echo "true";
+            } elseif (strpos($one['bind_type'], "int") !== false) {
+                echo 1;
+            } else {
+                echo '"value"';
+            }
+            echo "   //{$one['bind_type']} \n";
+
+            $f = false;
+        }
+    }
+    ?>
+    );
+    */
+<? endif ?>
+
+public function <?= $this->function_name ?>($dbh<? if ($this->group_update): ?>,$updateValues<? elseif ($this->auto_compatiable): ?>, $autoCompatiableValues<?
+    foreach ($this->variables as $name => $setting) {
+        if (!empty($setting['where_variable'])) {
+            echo ', $' . $name;
+        }
+    }
+    ?><? else: ?><?
     foreach ($this->variables as $name => $setting) {
         if (!empty($setting['func_param'])) {
             echo ', $' . $name;
@@ -33,32 +74,57 @@ foreach ($this->frome_tables as $one) {
 
 $setClumns = " SET ";
 <?
-$first = true;
+if ($this->auto_compatiable) {
 
-foreach ($this->columns as $one) {
-    if (!$first) {
-        echo '$' . "setClumns .=',`{$one['column_name']}`=';";
-    } else {
-        echo '$' . "setClumns .=' `{$one['column_name']}`=';";
+    echo "\$_setClumns=array();\n";
+    
+    foreach ($this->columns as $one) {
+
+        if ($one['type'] === 'variable') {
+            echo "if (isset(\$autoCompatiableValues['{$one['value']}'])){\n";
+            echo "\$_setClumns[]=\"`{$one['column_name']}`=:{$one['value']}\";\n";
+           
+            echo "}\n";
+        } else if ($one['type'] === 'pure') {
+            
+            echo "\$_setClumns[]=\":fix_{$one['column_name']}\";\n";
+        } else if ($one['type'] === 'function') {
+           
+            echo "\$_setClumns[]=\":{$one['value']}\";\n";
+        }
+        echo "\n";
     }
-    $first = false;
+
+    echo '$setClumns .= implode(",",$_setClumns);' . "\n";
+    
+} else {
+    $first = true;
+
+    foreach ($this->columns as $one) {
+        if (!$first) {
+            echo '$' . "setClumns .=',`{$one['column_name']}`=';";
+        } else {
+            echo '$' . "setClumns .=' `{$one['column_name']}`=';";
+        }
+        $first = false;
 
 
-    echo "";
+        echo "";
 
 
-    if ($one['type'] === 'variable') {
-        echo '$' . "setClumns .=':{$one['value']}';\n";
-    } else if ($one['type'] === 'pure') {
-        echo '$' . "setClumns .=':fix_{$one['column_name']}';\n";
-    } else if ($one['type'] === 'function') {
-        echo '$' . "setClumns .='{$one['value']}';\n";
+        if ($one['type'] === 'variable') {
+            echo '$' . "setClumns .=':{$one['value']}';\n";
+        } else if ($one['type'] === 'pure') {
+            echo '$' . "setClumns .=':fix_{$one['column_name']}';\n";
+        } else if ($one['type'] === 'function') {
+            echo '$' . "setClumns .='{$one['value']}';\n";
+        }
+
+
+
+
+        echo "\n";
     }
-
-
-
-
-    echo "\n";
 }
 
 echo '$runQuery.=$setClumns;';
