@@ -1,0 +1,1 @@
+generate query code rather than write it
