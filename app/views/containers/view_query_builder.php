@@ -57,26 +57,28 @@ class view_query_builder extends view {
     }
 
     public function generatPdoFixStrBinds($smtpName) {
-        foreach ($this->columns as $one) {
-            if ($one['type'] === 'pure') {
+        if (!empty($this->columns)) {
+            foreach ($this->columns as $one) {
+                if ($one['type'] === 'pure') {
 
-                $pType = 'PDO::PARAM_STR';
+                    $pType = 'PDO::PARAM_STR';
 
-                if (!empty($one['bind_type'])) {
-                    $by = strtolower($one['bind_type']);
-                    foreach (view_query_builder::$MYSQL_TYPE_2_PDO_TYPE_MAP as $mkey => $pv) {
+                    if (!empty($one['bind_type'])) {
+                        $by = strtolower($one['bind_type']);
+                        foreach (view_query_builder::$MYSQL_TYPE_2_PDO_TYPE_MAP as $mkey => $pv) {
 
-                        if (strpos($by, $mkey) !== false) {
-                            $pType = $pv;
+                            if (strpos($by, $mkey) !== false) {
+                                $pType = $pv;
+                            }
                         }
                     }
+                    if ($pType === 'PDO::PARAM_INT') {
+                        echo '$temp_fix_value_for_bind=' . $one['value'] . ";\n";
+                    } else {
+                        echo '$temp_fix_value_for_bind=' . "'" . str_replace("'", "\\" . "'", $one['value']) . "';\n";
+                    }
+                    echo $smtpName . '->bindParam(\':fix_' . $one['column_name'] . '\',$temp_fix_value_for_bind, ' . "{$pType});\n";
                 }
-                if ($pType === 'PDO::PARAM_INT') {
-                    echo '$temp_fix_value_for_bind=' . $one['value'] . ";\n";
-                } else {
-                    echo '$temp_fix_value_for_bind=' . "'" . str_replace("'", "\\" . "'", $one['value']) . "';\n";
-                }
-                echo $smtpName . '->bindParam(\':fix_' . $one['column_name'] . '\',$temp_fix_value_for_bind, ' . "{$pType});\n";
             }
         }
     }
