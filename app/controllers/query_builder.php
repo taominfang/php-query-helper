@@ -206,6 +206,10 @@ class Query_builderController extends GeneralWrapper {
 
         if ($tableInfo === NULL) {
 
+            MLog::dExport($_GET);
+            MLog::d($_GET['tablesInfo']);
+            MLog::d("\"a_a\"");
+            
             throw new Exception("[{$_GET['tablesInfo']}] is not a json string");
         }
 
