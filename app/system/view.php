@@ -102,7 +102,6 @@ class view {
     public function show($memberName) {
         if (!empty($memberName)) {
 
-            MLog::d(":::'{$memberName}',");
             if (isset($this->{$memberName})) {
 
                 echo $this->{$memberName};

@@ -98,7 +98,6 @@ class Query_builderController extends GeneralWrapper {
         $proDB->close();
         $_SESSION['project_index'] = $project_index;
 
-        MLog::d("projFileName:{$projFileName} index:{$project_index}");
         $this->redirect($this->view->popUrl("query_builder/select_tables"));
     }
 
@@ -137,7 +136,7 @@ class Query_builderController extends GeneralWrapper {
 
 
         $this->view->addInternalJs("items_table_pickup.js");
-        //MLog::dExport($dbs);
+
         unset($this->pdo_db);
     }
 
@@ -186,7 +185,7 @@ class Query_builderController extends GeneralWrapper {
             }
 
             unset($this->pdo_db);
-            MLog::d(json_encode($tables));
+           
             $this->set("ajax_output", json_encode($tables));
         }
     }
@@ -206,10 +205,7 @@ class Query_builderController extends GeneralWrapper {
 
         if ($tableInfo === NULL) {
 
-            MLog::dExport($_GET);
-            MLog::d($_GET['tablesInfo']);
-            MLog::d("\"a_a\"");
-            
+
             throw new Exception("[{$_GET['tablesInfo']}] is not a json string");
         }
 
@@ -255,7 +251,7 @@ class Query_builderController extends GeneralWrapper {
         $this->view->saved_header = $savedHeader;
 
         $_SESSION['db_tables'] = serialize($db_tables);
-        MLog::dExport($db_tables, 'talbes==============:');
+        
     }
 
     public function create_pdo_connect_code() {
@@ -275,15 +271,14 @@ class Query_builderController extends GeneralWrapper {
                 $this->set('dbname', $_POST['db_name']);
             }
         } else {
-            MLog::d("open project db fail!");
+            
         }
     }
 
     public function create_definitions() {
         $this->setLayout("ajax.phtml");
 
-        MLog::dExport($_POST);
-
+       
 
         $this->openPDOdb();
 
@@ -345,8 +340,7 @@ class Query_builderController extends GeneralWrapper {
 
         $this->view->db_table_info = unserialize($_SESSION['db_tables']);
 
-        MLog::dExport($_POST);
-
+        
         $this->saveGlobalSetting();
     }
 
@@ -402,7 +396,7 @@ class Query_builderController extends GeneralWrapper {
                 $logicStrs = $this->logic2String($logic['logic_data'], $uidColumnMap, $lineIdAliasMap, $variables);
                 $oneFromTable['logic_strings'] = $logicStrs;
                 $oneFromTable['join_type'] = $logic['join_type'];
-                MLog::dExport($lineIdLogicMap);
+               
             }
 
             $fromTables[] = $oneFromTable;
@@ -440,6 +434,7 @@ class Query_builderController extends GeneralWrapper {
             unset($one);
         }
         foreach ($oderBy as &$one) {
+            
             if ($one['type'] === 'variable') {
                 $variables[$one['variable']] = array('func_param' => true, 'bind_type' => '');
                 $descVairalbeName = 'ordery_by_' . $one['variable'] . '_is_desc';
@@ -449,9 +444,11 @@ class Query_builderController extends GeneralWrapper {
                 $column = $uidColumnMap[$one['column_id']];
                 $tableFullName = $lineIdTableFullNameMap[$column['line_uid']];
                 $tableVariable = $tableVariableMap[$tableFullName];
+                $tableAlias = $lineIdAliasMap[$column['line_uid']];
                 $one['column_name'] = $column['name'];
                 $one['table_alias'] = $tableAlias;
                 $one['table_varialbe'] = $tableVariable;
+               
             }
         }
 
@@ -469,16 +466,7 @@ class Query_builderController extends GeneralWrapper {
         $this->set('variables', $variables);
         $this->set('pagination_function_enable', !empty($_POST['query_add_page_function']));
 
-        //MLog::dExport($_POST);
-//        MLog::dExport($columns, 'columns');
-//        MLog::dExport($tableInfo, '$tableInfo');
-//        MLog::dExport($lineIdTableArray, '$uidTableMap');
-//        MLog::dExport($lineIdAliasMap, '$lineIdAliasMap');
-//        MLog::dExport($tableVariableMap, '$tableVariableMap');
-//        MLog::dExport($lineIdLogicMap, '$lineIdLogicMap');
-//        MLog::dExport($uidColumnMap, '$uidColumnMap');
-//        MLog::dExport($variables, '$variables');
-        MLog::dExport($oderBy, '$oderBy');
+        
 
         $this->saveGlobalSetting();
     }
@@ -561,7 +549,7 @@ class Query_builderController extends GeneralWrapper {
 
             if ($detail['type'] === 'variable') {
 
-                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $detail['data_type'],"is_column"=>true);
+                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $detail['data_type'], "is_column" => true);
             }
         }
 
@@ -574,17 +562,9 @@ class Query_builderController extends GeneralWrapper {
         $this->set('group_update', !empty($_POST['group_update']));
         $this->set('auto_compatiable', !empty($_POST['auto_compatiable']));
         $this->set('around_transaction', !empty($_POST['around_transaction']));
-        
 
-        //MLog::dExport($_POST);
-//        MLog::dExport($columns, 'columns');
-//        MLog::dExport($tableInfo, '$tableInfo');
-//        MLog::dExport($lineIdTableArray, '$uidTableMap');
-//        MLog::dExport($lineIdAliasMap, '$lineIdAliasMap');
-//        MLog::dExport($tableVariableMap, '$tableVariableMap');
-//        MLog::dExport($lineIdLogicMap, '$lineIdLogicMap');
-//        MLog::dExport($uidColumnMap, '$uidColumnMap');
-//        MLog::dExport($variables, '$variables');
+
+        
         $this->saveGlobalSetting();
     }
 
@@ -656,16 +636,6 @@ class Query_builderController extends GeneralWrapper {
         $this->set('variables', $variables);
 
 
-
-        //MLog::dExport($_POST);
-//        MLog::dExport($columns, 'columns');
-//        MLog::dExport($tableInfo, '$tableInfo');
-//        MLog::dExport($lineIdTableArray, '$uidTableMap');
-//        MLog::dExport($lineIdAliasMap, '$lineIdAliasMap');
-//        MLog::dExport($tableVariableMap, '$tableVariableMap');
-//        MLog::dExport($lineIdLogicMap, '$lineIdLogicMap');
-//        MLog::dExport($uidColumnMap, '$uidColumnMap');
-//        MLog::dExport($variables, '$variables');
         $this->saveGlobalSetting();
     }
 
@@ -749,7 +719,7 @@ class Query_builderController extends GeneralWrapper {
 
             if ($detail['type'] === 'variable') {
 
-                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $detail['data_type'],"is_column"=>true);
+                $variables[$detail['value']] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $detail['data_type'], "is_column" => true);
             }
         }
 
@@ -770,22 +740,12 @@ class Query_builderController extends GeneralWrapper {
             $this->set('return_last_id', false);
         }
 
-//        MLog::dExport($_POST);
-//        MLog::dExport($columns, 'columns');
-//        MLog::dExport($tableInfo, '$tableInfo');
-//        MLog::dExport($lineIdTableArray, '$uidTableMap');
-//        MLog::dExport($lineIdAliasMap, '$lineIdAliasMap');
-//        MLog::dExport($tableVariableMap, '$tableVariableMap');
-//        MLog::dExport($lineIdLogicMap, '$lineIdLogicMap');
-//        MLog::dExport($uidColumnMap, '$uidColumnMap');
-//        MLog::dExport($variables, '$variables');
         $this->saveGlobalSetting();
     }
 
     public function load_setting() {
         $this->setLayout("ajax.phtml");
 
-        MLog::dExport($_GET);
         $name = !empty($_GET['name']) ? $_GET['name'] : null;
         $sub_name = !empty($_GET['sub_name']) ? $_GET['sub_name'] : null;
 
@@ -806,7 +766,6 @@ class Query_builderController extends GeneralWrapper {
             } else {
                 $key = $name . '_' . $sub_name;
                 $nv = $this->project_db->get($key);
-                MLog::dExport($nv, "from key{$key}");
                 if ($nv === null) {
                     $re['result'] = 'nodata';
                 } else {
@@ -818,14 +777,12 @@ class Query_builderController extends GeneralWrapper {
             }
         }
 
-        MLog::dExport($re);
         $this->view->jsonStr = json_encode($re);
     }
 
     protected function logic2String($logic, $columnIdInfoMap, $lineIdAliasMap, &$variables) {
 
-        MLog::dExport($logic);
-
+        
         if ($logic === null) {
             return null;
         }
@@ -858,11 +815,6 @@ class Query_builderController extends GeneralWrapper {
             } else {
                 $logicV = $cond ['logic_value'];
             }
-
-
-            MLog::d("right:{$rightV}");
-
-
 
             if ($logicV === "IS NULL" || $logicV === 'IS NOT NULL') {
 
@@ -1008,7 +960,7 @@ class Query_builderController extends GeneralWrapper {
     protected function transformByType($v, $type) {
 
         if ($type === 'in_program_definitions' || $type === 'variable_array_value') {
-            MLog::d("type:{$type} v:{$v}");
+
             return $v;
         } else {
             return $this->addQuote($v);
@@ -1020,7 +972,7 @@ class Query_builderController extends GeneralWrapper {
             return '???';
         }
         if ($sel === "variable_value") {
-            $variables[$v] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $dataType,'where_variable'=>true);
+            $variables[$v] = array('func_param' => true, 'bind_var' => true, 'bind_type' => $dataType, 'where_variable' => true);
             return ':' . $v;
         } else if ($sel === 'variable_array_value') {
 
@@ -1069,7 +1021,6 @@ class Query_builderController extends GeneralWrapper {
 
             $this->project_db->set($localKey, $localSetting);
 
-            MLog::dExport($localSetting, "{$localKey} write to ");
 
             $this->project_db->close();
         }

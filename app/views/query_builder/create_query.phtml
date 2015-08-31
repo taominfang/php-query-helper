@@ -79,6 +79,7 @@ if (!empty($this->order_by)) {
         }
 
         if ($one['type'] === 'fixed') {
+            
             if (empty($one['table_alias'])) {
                 if ($this->table_size === 1) {
                     $columnName = "`{$one['column_name']}`";

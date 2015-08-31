@@ -1660,7 +1660,6 @@ Action:
             <input class="setting_error_log_function_name" name="setting_error_log_function_name" value="" type="hidden">
             <input class="saved_header" name="saved_header" value="<?= $this->saved_header ?>" type="hidden">
             <?
-            MLog::dExport($this->db_table_info);
             $tableName = "ERROR! can not get table name !!!!";
             $tableDetail = null;
             foreach ($this->db_table_info as $db => $tables) {

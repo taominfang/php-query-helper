@@ -228,9 +228,6 @@ class Html_builderController extends GeneralWrapper {
         }
         
 
-        MLog::dExport($rList);
-        MLog::dExport($_POST);
-        MLog::dExport($radioList);
         $this->set('radio_list', $radioList);
     }
 
