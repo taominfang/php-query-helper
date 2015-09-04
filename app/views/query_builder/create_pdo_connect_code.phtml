@@ -1,4 +1,4 @@
-
+public function connectPDO(){
 $engine='<?= $this->engine ?>';
 $host='<?= $this->host ?>';
 $port='<?= $this->port ?>';
@@ -18,3 +18,19 @@ $initPDO=array();
 //$initPDO[PDO::MYSQL_ATTR_INIT_COMMAND] = "SET NAMES utf8";
 
 $dbh= new PDO($dsn, $user, $password,$initPDO);
+return $dbh;
+}
+
+public function test($dbh){
+        if($dbh===null){
+            try {
+                $dbh=  $this->connectPDO();
+            } catch (Exception $exc) {
+                error_log($exc->getMessage().".\n Trace:\n".  $exc->getTraceAsString());
+                return false;
+            }
+
+            
+        }
+        
+    }
