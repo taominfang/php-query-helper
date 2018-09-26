@@ -1,4 +1,6 @@
     
+# be sure : LoadModule rewrite_module libexec/apache2/mod_rewrite.so is one in apache config
+# in : <Directory   .... AllowOverride All
 RewriteEngine On
 # The following rule tells Apache that if the requested filename
 # exists, simply serve it.

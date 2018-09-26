@@ -1,5 +1,5 @@
 <?php
-
+error_log( "ok");
 include_once 'app/system/index.php';
 /* 
  * To change this license header, choose License Headers in Project Properties.

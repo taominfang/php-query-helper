@@ -238,6 +238,10 @@ $stmt = $dbh->prepare($runQuery);
 
 
     $stmt_r = $stmt->execute();
+    <? if ($this->around_transaction): ?>
+        $dbh->commit();
+
+    <? endif; ?>
     if($stmt_r){
     <? if ($this->return_last_id): ?>
         return $dbh->lastInsertId ();

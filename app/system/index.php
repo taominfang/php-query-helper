@@ -26,8 +26,6 @@ if (isset($t1[0])) {
 $uris = explode('/', $uri);
 
 
-
-
 if (!empty($uris[1])) {
     $controllerName = strtolower($uris[1]);
 } else {

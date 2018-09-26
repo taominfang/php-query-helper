@@ -184,6 +184,10 @@ $stmt = $dbh->prepare($runQuery);
     <? $this->generatPdoBinds('$stmt'); ?>
     <? $this->generatPdoFixStrBinds('$stmt'); ?>
     $stmt_r = $stmt->execute();
+    <? if ($this->around_transaction): ?>
+        $dbh->commit();
+
+    <? endif; ?>
     if($stmt_r){
     return $stmt->rowCount();
     }
